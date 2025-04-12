@@ -1,0 +1,129 @@
+package com.socialmedia.authen_service.service;
+
+import com.nimbusds.jose.JOSEException;
+import com.socialmedia.authen_service.config.JwtTokenProvider;
+import com.socialmedia.authen_service.dto.request.LoginRequest;
+import com.socialmedia.authen_service.dto.request.LogoutRequest;
+import com.socialmedia.authen_service.dto.request.RefreshRequest;
+import com.socialmedia.authen_service.dto.request.RegisterRequest;
+import com.socialmedia.authen_service.dto.response.LoginResponse;
+import com.socialmedia.authen_service.dto.response.RegisterResponse;
+import com.socialmedia.authen_service.entity.InvalidatedToken;
+import com.socialmedia.authen_service.entity.User;
+import com.socialmedia.authen_service.exception.AppException;
+import com.socialmedia.authen_service.exception.ErrorCode;
+import com.socialmedia.authen_service.mapper.InvalidatedTokenRepository;
+import com.socialmedia.authen_service.mapper.UserMapper;
+import com.socialmedia.authen_service.repository.UserRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
+import java.util.Date;
+
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
+@Slf4j
+public class AuthService {
+    InvalidatedTokenRepository invalidatedTokenRepository;
+    UserRepository userRepository;
+    UserMapper userMapper;
+    JwtTokenProvider jwt;
+
+
+    // Login API
+    public LoginResponse login(LoginRequest request) {
+
+        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Use the PasswordEncoder bean from SecurityConfig
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS_PASSWORD);
+        }
+
+        // Generate JWT tokens (access and refresh tokens)
+        var accessToken = jwt.generateToken(user);
+
+        return userMapper.userEntityToLoginResponse(user, accessToken);
+    }
+
+    // Register API
+    public RegisterResponse register(RegisterRequest request) {
+
+        // Check if the user already exists
+        if(userRepository.existsByEmailAndUsername(request.getEmail(), request.getUsername())) {
+            throw new AppException(ErrorCode.DUPLICATE_USERNAME_OR_EMAIL);
+        }
+
+        User user = userMapper.registerRequestMapToUse(request);
+
+        // Encrypt the password
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        userRepository.save(user);
+
+        userMapper.userToRegisterResponse(user);
+
+        return RegisterResponse.builder()
+                .message("User registered successfully")
+                .build();
+    }
+
+    // Refresh Token API
+    public LoginResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = jwt.verifyToken(request.getToken(), true);
+
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken =
+                InvalidatedToken.builder()
+                        .id(jit)
+                        .expiredAt(expiryTime)
+                        .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+
+        var user =
+                userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        var token = jwt.generateToken(user);
+
+        return LoginResponse.builder()
+                .username(user.getUsername())
+                .accessToken(token)
+                .build();
+    }
+
+    // Logout API
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        try {
+            var signToken = jwt.verifyToken(request.getToken(), true);
+
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidatedToken invalidatedToken =
+                    InvalidatedToken.builder()
+                            .id(jit)
+                            .expiredAt(expiryTime)
+                            .build();
+
+            invalidatedTokenRepository.save(invalidatedToken);
+        } catch (AppException exception) {
+            log.info("Token already expired");
+        }
+    }
+
+}
