@@ -1,13 +1,11 @@
 package com.socialmedia.authen_service.controller;
 
 import com.nimbusds.jose.JOSEException;
-import com.socialmedia.authen_service.dto.request.LoginRequest;
-import com.socialmedia.authen_service.dto.request.LogoutRequest;
-import com.socialmedia.authen_service.dto.request.RefreshRequest;
-import com.socialmedia.authen_service.dto.request.RegisterRequest;
+import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.ApiResponse;
 import com.socialmedia.authen_service.dto.response.LoginResponse;
 import com.socialmedia.authen_service.dto.response.RegisterResponse;
+import com.socialmedia.authen_service.dto.response.ValidateTokenResponse;
 import com.socialmedia.authen_service.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -60,6 +58,15 @@ public class AuthController {
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Logout successful")
+                .build();
+    }
+
+    @PostMapping("/validateToken")
+    public ApiResponse<ValidateTokenResponse> validateToken(@RequestBody @Valid ValidateTokenRequest request) throws ParseException, JOSEException {
+        authService.validateToken(request);
+        return ApiResponse.<ValidateTokenResponse>builder()
+                .code(200)
+                .result(ValidateTokenResponse.builder().valid(true).build())
                 .build();
     }
 

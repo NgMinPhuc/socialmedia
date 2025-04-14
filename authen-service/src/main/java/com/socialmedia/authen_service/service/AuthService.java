@@ -2,17 +2,15 @@ package com.socialmedia.authen_service.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.socialmedia.authen_service.config.JwtTokenProvider;
-import com.socialmedia.authen_service.dto.request.LoginRequest;
-import com.socialmedia.authen_service.dto.request.LogoutRequest;
-import com.socialmedia.authen_service.dto.request.RefreshRequest;
-import com.socialmedia.authen_service.dto.request.RegisterRequest;
+import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.LoginResponse;
 import com.socialmedia.authen_service.dto.response.RegisterResponse;
+import com.socialmedia.authen_service.dto.response.ValidateTokenResponse;
 import com.socialmedia.authen_service.entity.InvalidatedToken;
 import com.socialmedia.authen_service.entity.User;
 import com.socialmedia.authen_service.exception.AppException;
 import com.socialmedia.authen_service.exception.ErrorCode;
-import com.socialmedia.authen_service.mapper.InvalidatedTokenRepository;
+import com.socialmedia.authen_service.repository.InvalidatedTokenRepository;
 import com.socialmedia.authen_service.mapper.UserMapper;
 import com.socialmedia.authen_service.repository.UserRepository;
 import lombok.AccessLevel;
@@ -124,6 +122,19 @@ public class AuthService {
         } catch (AppException exception) {
             log.info("Token already expired");
         }
+    }
+
+    // Validate Token API
+    public ValidateTokenResponse validateToken(ValidateTokenRequest validateToken) throws ParseException, JOSEException {
+        boolean isValid = true;
+
+        try{
+            jwt.verifyToken(validateToken.getToken(), false);
+        }catch{
+            isValid = false;
+        }
+
+        return isValid;
     }
 
 }

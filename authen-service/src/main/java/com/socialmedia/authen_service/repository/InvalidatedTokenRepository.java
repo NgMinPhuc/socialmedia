@@ -1,4 +1,4 @@
-package com.socialmedia.authen_service.mapper;
+package com.socialmedia.authen_service.repository;
 
 import com.socialmedia.authen_service.entity.InvalidatedToken;
 import org.springframework.data.jpa.repository.JpaRepository;

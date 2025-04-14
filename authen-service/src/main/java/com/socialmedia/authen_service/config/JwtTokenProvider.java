@@ -8,7 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.socialmedia.authen_service.entity.User;
 import com.socialmedia.authen_service.exception.AppException;
 import com.socialmedia.authen_service.exception.ErrorCode;
-import com.socialmedia.authen_service.mapper.InvalidatedTokenRepository;
+import com.socialmedia.authen_service.repository.InvalidatedTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
