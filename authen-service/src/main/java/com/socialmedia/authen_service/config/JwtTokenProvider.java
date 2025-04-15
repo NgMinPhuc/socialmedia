@@ -88,4 +88,12 @@ public class JwtTokenProvider {
         return signedJWT;
     }
 
+    public String getUsernameFromToken(String token) throws ParseException, JOSEException {
+        SignedJWT signedJWT = verifyToken(token, false);
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+
+        return claimsSet.getSubject();
+    }
+
+
 }

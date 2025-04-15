@@ -11,10 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -63,11 +60,19 @@ public class AuthController {
 
     @PostMapping("/validateToken")
     public ApiResponse<ValidateTokenResponse> validateToken(@RequestBody @Valid ValidateTokenRequest request) throws ParseException, JOSEException {
-        authService.validateToken(request);
+        ValidateTokenResponse response = authService.validateToken(request);
         return ApiResponse.<ValidateTokenResponse>builder()
                 .code(200)
-                .result(ValidateTokenResponse.builder().valid(true).build())
+                .result(response)
                 .build();
     }
 
+    @PostMapping("/changePassword")
+    public ApiResponse<Void> changePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid ChangePasswordRequest request) throws ParseException, JOSEException {
+        authService.changePassword(token, request);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Password changed successfully")
+                .build();
+    }
 }

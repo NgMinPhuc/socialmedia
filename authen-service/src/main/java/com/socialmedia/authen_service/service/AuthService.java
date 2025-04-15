@@ -2,6 +2,7 @@ package com.socialmedia.authen_service.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.socialmedia.authen_service.config.JwtTokenProvider;
+import com.socialmedia.authen_service.config.SecurityConfig;
 import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.LoginResponse;
 import com.socialmedia.authen_service.dto.response.RegisterResponse;
@@ -13,6 +14,7 @@ import com.socialmedia.authen_service.exception.ErrorCode;
 import com.socialmedia.authen_service.repository.InvalidatedTokenRepository;
 import com.socialmedia.authen_service.mapper.UserMapper;
 import com.socialmedia.authen_service.repository.UserRepository;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,6 +35,7 @@ public class AuthService {
     UserRepository userRepository;
     UserMapper userMapper;
     JwtTokenProvider jwt;
+    SecurityConfig securityConfig;
 
 
     // Login API
@@ -42,7 +45,7 @@ public class AuthService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Use the PasswordEncoder bean from SecurityConfig
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        PasswordEncoder passwordEncoder = securityConfig.passwordEncoder();
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS_PASSWORD);
         }
@@ -64,7 +67,7 @@ public class AuthService {
         User user = userMapper.registerRequestMapToUse(request);
 
         // Encrypt the password
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        PasswordEncoder passwordEncoder = securityConfig.passwordEncoder();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepository.save(user);
@@ -130,11 +133,35 @@ public class AuthService {
 
         try{
             jwt.verifyToken(validateToken.getToken(), false);
-        }catch{
+        }catch (AppException exception){
             isValid = false;
         }
 
-        return isValid;
+        return ValidateTokenResponse.builder()
+                .valid(isValid)
+                .build();
     }
 
+    // Change Password API
+    public void changePassword(String token, @Valid ChangePasswordRequest request) throws ParseException, JOSEException {
+
+        String username = jwt.getUsernameFromToken(token);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        PasswordEncoder passwordEncoder = securityConfig.passwordEncoder();
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS_PASSWORD);
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new AppException(ErrorCode.PASSWORDS_DO_NOT_MATCH);
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encodedNewPassword);
+        userRepository.save(user);
+    }
 }

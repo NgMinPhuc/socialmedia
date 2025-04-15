@@ -16,6 +16,7 @@ public enum ErrorCode {
     USERNAME_REQUIRED(400, "Username is required", HttpStatus.BAD_REQUEST),
     EMAIL_REQUIRED(400, "Email is required", HttpStatus.BAD_REQUEST),
     PASSWORD_REQUIRED(400, "Password is required", HttpStatus.BAD_REQUEST),
+    PASSWORDS_DO_NOT_MATCH(400, "Passwords do not match", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
