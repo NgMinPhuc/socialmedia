@@ -17,7 +17,7 @@ import java.text.ParseException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/users")
+@RequestMapping("/auth")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
     AuthService authService;

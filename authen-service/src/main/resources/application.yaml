@@ -1,9 +1,11 @@
 server:
-  port: 8080
+  port: 8081
   servlet:
-    context-path: /auth
+    context-path: /auth-service
 
 spring:
+  application:
+    name: auth-service
   datasource:
     url: jdbc:postgresql://localhost:5432/authDB
     username: admin
