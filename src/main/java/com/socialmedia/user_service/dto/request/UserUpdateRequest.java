@@ -5,9 +5,12 @@ import lombok.*;
 @Getter
 @Setter
 public class UserUpdateRequest {
-    private String username;
+
+    private String firstName;
+    private String lastName;
+    private String location;
+    private String phoneNumber;
     private String nickname;
     private LocalDate dob;
-
  
 }

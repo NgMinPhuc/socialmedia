@@ -10,7 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 public class UserUpdateResponse {
     private String id;
-    private String username;
+    private String firstName;
+    private String lastName;
+    private String location;
+    private String phoneNumber;
     private String nickname;
     private LocalDate dob;
 }
