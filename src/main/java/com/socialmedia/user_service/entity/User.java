@@ -19,3 +19,5 @@ public class User {
     private LocalDate dob;
 
 }
+
+//user just have id, username, nickname and dob
