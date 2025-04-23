@@ -69,6 +69,11 @@ public class AuthController {
 
     @PostMapping("/changePassword")
     public ApiResponse<Void> changePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid ChangePasswordRequest request) throws ParseException, JOSEException {
+
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
         authService.changePassword(token, request);
         return ApiResponse.<Void>builder()
                 .code(200)
