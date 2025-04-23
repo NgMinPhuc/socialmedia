@@ -24,7 +24,6 @@ public class UserService {
 
     // create user
     public User createUser(UserCreationRequest request) {
-        // TODO Auto-generated method stub
         User user = new User();
 
         user.setFirstName(request.getFirstname());
