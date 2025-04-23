@@ -7,7 +7,6 @@ import com.socialmedia.user_service.dto.response.ApiResponse;
 import com.socialmedia.user_service.entity.User;
 import com.socialmedia.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;

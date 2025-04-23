@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +12,7 @@ import com.socialmedia.user_service.dto.request.AvatarRequest;
 import com.socialmedia.user_service.dto.request.UserCreationRequest;
 import com.socialmedia.user_service.dto.request.UserUpdateRequest;
 import com.socialmedia.user_service.entity.User;
+import com.socialmedia.user_service.exception.AvatarNotFoundException;
 import com.socialmedia.user_service.repository.UserRepository;
 
 import java.nio.file.Path;
@@ -79,23 +79,38 @@ public class UserService {
         return avatarUrl;
     }
 
-    // delete 
-    public void deleteAvatar(String userId) {
-        User user = getUser(userId);
-        String avatarUrl = user.getAvatarUrl();
-        File file = new File(avatarUrl);
-        if (file.exists()) {
-            file.delete();
-        }
-        user.setAvatarUrl(null);
-        userRepository.save(user);
+// delete 
+// delete 
+public void deleteAvatar(String userId) {
+    User user = getUser(userId);
+    String avatarUrl = user.getAvatarUrl();
+    
+    if (avatarUrl == null || avatarUrl.isEmpty()) {
+        throw new AvatarNotFoundException("Avatar not found");
     }
+    
+    File file = new File(avatarUrl);
+    if (!file.exists()) {
+        throw new AvatarNotFoundException("Avatar file not found");
+    }
+    
+    file.delete();
+    user.setAvatarUrl(null);
+    userRepository.save(user);
+}
 
-    // get 
-    public String getAvatar(String userId) {
-        User user = getUser(userId);
-        return user.getAvatarUrl();
+
+// get 
+public String getAvatar(String userId) {
+    User user = getUser(userId);
+    String avatarUrl = user.getAvatarUrl();
+    
+    if (avatarUrl == null || avatarUrl.isEmpty()) {
+        throw new AvatarNotFoundException("Avatar not found");
     }
+    
+    return avatarUrl;
+}
 
     private String saveImage(MultipartFile file) throws IOException {
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
