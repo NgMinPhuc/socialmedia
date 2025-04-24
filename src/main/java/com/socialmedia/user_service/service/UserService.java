@@ -57,66 +57,44 @@ public class UserService {
 
     // service about avatar
     
-   private final String avatarDirectory = "C:/Users/kim/image";
-
-    // upload 
-    public String uploadAvatar(String userId, AvatarRequest avatarRequest) throws IOException {
-        MultipartFile file = avatarRequest.getFile();
-        String avatarUrl = saveImage(file);
-        User user = getUser(userId);
-        user.setAvatarUrl(avatarUrl);
-        userRepository.save(user);
-        return avatarUrl;
-    }
-
-    // update 
-    public String updateAvatar(String userId, AvatarRequest avatarRequest) throws IOException {
-        MultipartFile file = avatarRequest.getFile();
-        User user = getUser(userId);
-        String avatarUrl = saveImage(file);
-        user.setAvatarUrl(avatarUrl);
-        userRepository.save(user);
-        return avatarUrl;
-    }
-
-// delete 
-// delete 
-public void deleteAvatar(String userId) {
+ // upload 
+ public void uploadAvatar(String userId, AvatarRequest avatarRequest) throws IOException {
+    MultipartFile file = avatarRequest.getFile();
     User user = getUser(userId);
-    String avatarUrl = user.getAvatarUrl();
-    
-    if (avatarUrl == null || avatarUrl.isEmpty()) {
-        throw new AvatarNotFoundException("Avatar not found");
-    }
-    
-    File file = new File(avatarUrl);
-    if (!file.exists()) {
-        throw new AvatarNotFoundException("Avatar file not found");
-    }
-    
-    file.delete();
-    user.setAvatarUrl(null);
+    user.setAvatar(file.getBytes()); // Lưu ảnh dưới dạng byte[]
     userRepository.save(user);
 }
 
-
-// get 
-public String getAvatar(String userId) {
+// update 
+public void updateAvatar(String userId, AvatarRequest avatarRequest) throws IOException {
+    MultipartFile file = avatarRequest.getFile();
     User user = getUser(userId);
-    String avatarUrl = user.getAvatarUrl();
+    user.setAvatar(file.getBytes()); // Cập nhật ảnh
+    userRepository.save(user);
+}
+
+// delete 
+public void deleteAvatar(String userId) {
+    User user = getUser(userId);
+    byte[] avatar = user.getAvatar();
     
-    if (avatarUrl == null || avatarUrl.isEmpty()) {
+    if (avatar == null || avatar.length == 0) {
         throw new AvatarNotFoundException("Avatar not found");
     }
     
-    return avatarUrl;
+    user.setAvatar(null); // Xóa dữ liệu avatar
+    userRepository.save(user);
 }
 
-    private String saveImage(MultipartFile file) throws IOException {
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(avatarDirectory, fileName);
-        Files.copy(file.getInputStream(), filePath);
-        return filePath.toString();
+// get 
+public byte[] getAvatar(String userId) {
+    User user = getUser(userId);
+    byte[] avatar = user.getAvatar();
+    
+    if (avatar == null || avatar.length == 0) {
+        throw new AvatarNotFoundException("Avatar not found");
     }
-
+    
+    return avatar; // Trả về byte[]
+}
 }

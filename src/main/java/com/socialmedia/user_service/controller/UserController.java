@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/users")
@@ -53,11 +54,10 @@ public class UserController {
     @PostMapping("/avatarUpload/{id}")
     public ApiResponse<String> uploadAvatar(@PathVariable String id, @ModelAttribute AvatarRequest avatarRequest) {
         try {
-            String avatarUrl = userService.uploadAvatar(id, avatarRequest);
+            userService.uploadAvatar(id, avatarRequest);
             return ApiResponse.<String>builder()
                     .code(200)
                     .message("Avatar uploaded successfully")
-                    .result(avatarUrl)
                     .build();
         } catch (IOException e) {
             return ApiResponse.<String>builder()
@@ -68,14 +68,13 @@ public class UserController {
     }
 
     // Cập nhật hình ảnh
-    @PutMapping("/avatarupdate /{id}")
+    @PutMapping("/avatarUpdate/{id}")
     public ApiResponse<String> updateAvatar(@PathVariable String id, @ModelAttribute AvatarRequest avatarRequest) {
         try {
-            String avatarUrl = userService.updateAvatar(id, avatarRequest);
+            userService.updateAvatar(id, avatarRequest);
             return ApiResponse.<String>builder()
                     .code(200)
                     .message("Avatar updated successfully")
-                    .result(avatarUrl)
                     .build();
         } catch (IOException e) {
             return ApiResponse.<String>builder()
@@ -98,10 +97,19 @@ public class UserController {
     // Lấy hình ảnh
     @GetMapping("/avatarGet/{id}")
     public ApiResponse<String> getAvatar(@PathVariable String id) {
-        String avatarUrl = userService.getAvatar(id);
+        byte[] avatarBytes = userService.getAvatar(id);
+        if (avatarBytes == null) {
+            return ApiResponse.<String>builder()
+                    .code(404)
+                    .message("Avatar not found")
+                    .build();
+        }
+        
+        // Mã hóa byte[] thành Base64 để gửi về frontend
+        String avatarBase64 = Base64.getEncoder().encodeToString(avatarBytes);
         return ApiResponse.<String>builder()
                 .code(200)
-                .result(avatarUrl)
+                .result(avatarBase64) // Trả về dữ liệu ảnh đã mã hóa
                 .build();
     }
 }

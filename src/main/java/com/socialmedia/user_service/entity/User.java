@@ -1,15 +1,14 @@
 package com.socialmedia.user_service.entity;
 
 import java.time.LocalDate;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+
+import jakarta.persistence.*;
 import lombok.*;
 @Getter
 @Setter
 
 @Entity
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -19,7 +18,7 @@ public class User {
     private String nickname;
     private LocalDate dob;
     private String phoneNumber;
-    private String avatarUrl; // User's avatar
+    private byte[] avatar; // Kiểu dữ liệu mảng byte cho avatar
     private String location; // User's location
 
 }
