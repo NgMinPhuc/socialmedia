@@ -51,7 +51,7 @@ public class UserController {
     }
 
     // Tải lên hình ảnh
-    @PostMapping("/avatarUpload/{id}")
+    @PostMapping("/uploadAvatar/{id}")
     public ApiResponse<String> uploadAvatar(@PathVariable String id, @ModelAttribute AvatarRequest avatarRequest) {
         try {
             userService.uploadAvatar(id, avatarRequest);
@@ -68,7 +68,7 @@ public class UserController {
     }
 
     // Cập nhật hình ảnh
-    @PutMapping("/avatarUpdate/{id}")
+    @PutMapping("/updateAvatar/{id}")
     public ApiResponse<String> updateAvatar(@PathVariable String id, @ModelAttribute AvatarRequest avatarRequest) {
         try {
             userService.updateAvatar(id, avatarRequest);
@@ -85,7 +85,7 @@ public class UserController {
     }
 
     // Xóa hình ảnh
-    @DeleteMapping("/avatarDelete/{id}")
+    @DeleteMapping("/deleteAvatar/{id}")
     public ApiResponse<Void> deleteAvatar(@PathVariable String id) {
         userService.deleteAvatar(id);
         return ApiResponse.<Void>builder()
@@ -95,7 +95,7 @@ public class UserController {
     }
 
     // Lấy hình ảnh
-    @GetMapping("/avatarGet/{id}")
+    @GetMapping("/getAvatar/{id}")
     public ApiResponse<String> getAvatar(@PathVariable String id) {
         byte[] avatarBytes = userService.getAvatar(id);
         if (avatarBytes == null) {
