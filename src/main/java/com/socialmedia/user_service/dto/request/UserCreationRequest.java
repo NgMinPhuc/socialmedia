@@ -7,8 +7,8 @@ import lombok.*;
 @Setter
 public class UserCreationRequest {
 
-    private String firstname;
-    private String lastname;
+    private String firstName;
+    private String lastName;
     private String location;
     private String phoneNumber;
     private String nickname;

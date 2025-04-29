@@ -1,9 +1,6 @@
 package com.socialmedia.user_service.service;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,8 +12,6 @@ import com.socialmedia.user_service.entity.User;
 import com.socialmedia.user_service.exception.AvatarNotFoundException;
 import com.socialmedia.user_service.repository.UserRepository;
 
-import java.nio.file.Path;
-
 @Service
 public class UserService {
     @Autowired
@@ -26,8 +21,8 @@ public class UserService {
     public User createUser(UserCreationRequest request) {
         User user = new User();
 
-        user.setFirstName(request.getFirstname());
-        user.setLastName(request.getLastname());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         user.setLocation(request.getLocation());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setNickname(request.getNickname());
