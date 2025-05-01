@@ -1,4 +1,4 @@
-package com.socialmedia.authen_service.dto.response;
+package com.socialmedia.api_gateway_service.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
