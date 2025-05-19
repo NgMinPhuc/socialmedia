@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,4 +26,9 @@ public class RegisterRequest {
     @NotBlank(message = "PASSWORD_REQUIRED")
     String password;
 
+    String firstName;
+    String lastName;
+    LocalDate dob;
+    String phoneNumber;
+    String location;
 }

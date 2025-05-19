@@ -5,15 +5,17 @@ import com.socialmedia.authen_service.config.JwtTokenProvider;
 import com.socialmedia.authen_service.config.SecurityConfig;
 import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.LoginResponse;
-import com.socialmedia.authen_service.dto.response.RegisterResponse;
+import com.socialmedia.authen_service.dto.response.MessageResponse;
 import com.socialmedia.authen_service.dto.response.ValidateTokenResponse;
 import com.socialmedia.authen_service.entity.InvalidatedToken;
 import com.socialmedia.authen_service.entity.User;
 import com.socialmedia.authen_service.exception.AppException;
 import com.socialmedia.authen_service.exception.ErrorCode;
+import com.socialmedia.authen_service.mapper.UserProfileMapper;
 import com.socialmedia.authen_service.repository.InvalidatedTokenRepository;
 import com.socialmedia.authen_service.mapper.UserMapper;
 import com.socialmedia.authen_service.repository.UserRepository;
+import com.socialmedia.authen_service.repository.httpClient.UserProfileClient;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -33,9 +37,10 @@ public class AuthService {
     InvalidatedTokenRepository invalidatedTokenRepository;
     UserRepository userRepository;
     UserMapper userMapper;
+    UserProfileMapper userProfileMapper;
     JwtTokenProvider jwt;
     SecurityConfig securityConfig;
-
+    UserProfileClient userProfileClient;
 
     // Login API
     public LoginResponse login(LoginRequest request) {
@@ -56,7 +61,7 @@ public class AuthService {
     }
 
     // Register API
-    public RegisterResponse register(RegisterRequest request) {
+    public MessageResponse register(RegisterRequest request) {
 
         // Check if the user already exists
         if(userRepository.existsByEmailAndUsername(request.getEmail(), request.getUsername())) {
@@ -71,9 +76,19 @@ public class AuthService {
 
         userRepository.save(user);
 
+        // Create user profile in the user service
+        var userProfileCreationRequest = userProfileMapper.toUserProfileCreationRequest(request);
+        userProfileCreationRequest.setUserId(user.getUserId());
+        userProfileCreationRequest.setUserName(user.getUsername());
+        userProfileCreationRequest.setEmail(user.getEmail());
+
+        var userProfileResponse = userProfileClient.createUserProfile(userProfileCreationRequest);
+
+        //log.info(userProfileResponse.toString());
+
         userMapper.userToRegisterResponse(user);
 
-        return RegisterResponse.builder()
+        return MessageResponse.builder()
                 .message("User registered successfully")
                 .build();
     }

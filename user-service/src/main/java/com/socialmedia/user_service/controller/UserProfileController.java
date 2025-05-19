@@ -1,0 +1,73 @@
+package com.socialmedia.user_service.controller;
+
+import com.socialmedia.user_service.dto.request.UserProfileCreationRequest;
+import com.socialmedia.user_service.dto.request.UserProfileUpdationRequest;
+import com.socialmedia.user_service.dto.response.ApiResponse;
+import com.socialmedia.user_service.dto.response.UserProfileResponse;
+import com.socialmedia.user_service.service.UserProfileService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/users")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class UserProfileController {
+    UserProfileService userProfileService;
+
+    @PostMapping("/create")
+    public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody UserProfileCreationRequest request) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .code(200)
+                .message("User profile created successfully")
+                .result(userProfileService.createUserProfile(request))
+                .build();
+    }
+
+    @PutMapping("/update")
+    public ApiResponse<UserProfileResponse> updateUserProfile(@RequestBody UserProfileUpdationRequest request) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .code(200)
+                .message("User profile updated successfully")
+                .result(userProfileService.updateUserProfile(request))
+                .build();
+    }
+
+    @GetMapping("/{userId}")
+    public ApiResponse<UserProfileResponse> getUserProfile(@PathVariable String userId) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .code(200)
+                .result(userProfileService.getUserProfile(userId))
+                .build();
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<List<UserProfileResponse>> getAllUserProfile() {
+        return ApiResponse.<List<UserProfileResponse>>builder()
+                .code(200)
+                .result(userProfileService.getAllUserProfile())
+                .build();
+    }
+
+//    @PostMapping("/unfollow/{id}")
+//    public ApiResponse<Void> unfollowUser(@PathVariable String id) {
+//        return ApiResponse.<Void>builder()
+//                .code(200)
+//                .message("Unfollowed user successfully")
+//                .result()
+//                .build();
+//    }
+//
+//    @PostMapping("/follow/{id}")
+//    public ApiResponse<Void> followUser(@PathVariable String id) {
+//        return ApiResponse.<Void>builder()
+//                .code(200)
+//                .message("Followed user successfully")
+//                .result("Followed user successfully")
+//                .build();
+//    }
+}

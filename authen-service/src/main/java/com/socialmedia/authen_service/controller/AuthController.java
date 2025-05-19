@@ -4,7 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.ApiResponse;
 import com.socialmedia.authen_service.dto.response.LoginResponse;
-import com.socialmedia.authen_service.dto.response.RegisterResponse;
+import com.socialmedia.authen_service.dto.response.MessageResponse;
 import com.socialmedia.authen_service.dto.response.ValidateTokenResponse;
 import com.socialmedia.authen_service.service.AuthService;
 import jakarta.validation.Valid;
@@ -32,9 +32,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<RegisterResponse> register(@RequestBody @Valid RegisterRequest request) {
-        RegisterResponse response = authService.register(request);
-        return ApiResponse.<RegisterResponse>builder()
+    public ApiResponse<MessageResponse> register(@RequestBody @Valid RegisterRequest request) {
+        MessageResponse response = authService.register(request);
+        return ApiResponse.<MessageResponse>builder()
                 .code(200)
                 .result(response)
                 .build();
