@@ -61,8 +61,7 @@ The platform consists of the following microservices:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/socialmedia.git
-   cd socialmedia
+
    ```
 
 2. **Configure MongoDB**
@@ -99,8 +98,8 @@ The platform consists of the following microservices:
 ## API Documentation
 
 API documentation is available through Swagger UI at:
-- API Gateway: http://localhost:8080/swagger-ui.html
-- Individual Services: http://localhost:{port}/swagger-ui.html
+- API Gateway:
+- Individual Services:
 
 ## Service Details
 
