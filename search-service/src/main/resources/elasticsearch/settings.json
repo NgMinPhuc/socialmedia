@@ -1,0 +1,48 @@
+{
+  "analysis": {
+    "analyzer": {
+      "custom_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "asciifolding",
+          "trim",
+          "word_delimiter_graph",
+          "custom_stemmer",
+          "custom_stop"
+        ]
+      },
+      "ngram_analyzer": {
+        "type": "custom",
+        "tokenizer": "ngram_tokenizer",
+        "filter": [
+          "lowercase",
+          "asciifolding"
+        ]
+      }
+    },
+    "tokenizer": {
+      "ngram_tokenizer": {
+        "type": "ngram",
+        "min_gram": 2,
+        "max_gram": 3,
+        "token_chars": ["letter", "digit"]
+      }
+    },
+    "filter": {
+      "custom_stemmer": {
+        "type": "stemmer",
+        "language": "english"
+      },
+      "custom_stop": {
+        "type": "stop",
+        "stopwords": "_english_"
+      }
+    }
+  },
+  "index": {
+    "max_ngram_diff": 2,
+    "refresh_interval": "1s"
+  }
+}

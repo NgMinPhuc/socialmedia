@@ -1,0 +1,76 @@
+{
+  "properties": {
+    "username": {
+      "type": "keyword",
+      "fields": {
+        "text": {
+          "type": "text",
+          "analyzer": "custom_analyzer"
+        },
+        "ngram": {
+          "type": "text",
+          "analyzer": "ngram_analyzer"
+        }
+      }
+    },
+    "fullName": {
+      "type": "text",
+      "analyzer": "custom_analyzer",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        },
+        "ngram": {
+          "type": "text",
+          "analyzer": "ngram_analyzer"
+        }
+      }
+    },
+    "bio": {
+      "type": "text",
+      "analyzer": "custom_analyzer",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 1024
+        }
+      }
+    },
+    "avatar": {
+      "type": "keyword"
+    },
+    "followers": {
+      "type": "long"
+    },
+    "following": {
+      "type": "long"
+    },
+    "interests": {
+      "type": "keyword",
+      "normalizer": "lowercase"
+    },
+    "location": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "strict_date_optional_time||epoch_millis"
+    },
+    "updatedAt": {
+      "type": "date",
+      "format": "strict_date_optional_time||epoch_millis"
+    },
+    "_class": {
+      "type": "keyword",
+      "index": false
+    }
+  },
+  "dynamic": "strict"
+}

@@ -1,0 +1,640 @@
+# Social Media API Test Examples
+
+## Authentication Service (Port 8081)
+
+### 1. Register User (POST /auth/register)
+```http
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+    "username": "johndoe",
+    "email": "john@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "User registered successfully",
+    "result": {
+        "message": "User registered successfully"
+    }
+}
+```
+
+### 2. Login (POST /auth/login)
+```http
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+    "username": "johndoe",
+    "password": "password123"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "result": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+}
+```
+
+### 3. Refresh Token (POST /auth/refreshToken)
+```http
+POST http://localhost:8081/auth/refreshToken
+Content-Type: application/json
+
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "result": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+}
+```
+
+### 4. Logout (POST /auth/logout)
+```http
+POST http://localhost:8081/auth/logout
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Logout successful"
+}
+```
+
+### 5. Validate Token (POST /auth/validateToken)
+```http
+POST http://localhost:8081/auth/validateToken
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "result": {
+        "valid": true,
+        "username": "johndoe",
+        "roles": ["USER"]
+    }
+}
+```
+
+### 6. Change Password (POST /auth/changePassword)
+```http
+POST http://localhost:8081/auth/changePassword
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "oldPassword": "password123",
+    "newPassword": "newpassword123",
+    "confirmPassword": "newpassword123"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Password changed successfully"
+}
+```
+
+## User Service (Port 8082)
+
+### 1. Create User Profile (POST /users/create)
+```http
+POST http://localhost:8082/users/create
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "userId": "user123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "userName": "johndoe",
+    "dob": "1990-01-01",
+    "phoneNumber": "+1234567890",
+    "location": "New York",
+    "email": "john@example.com"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "User profile created successfully",
+    "result": {
+        "id": "1",
+        "userId": "user123",
+        "firstName": "John",
+        "lastName": "Doe",
+        "userName": "johndoe",
+        "dob": "1990-01-01",
+        "phoneNumber": "+1234567890",
+        "location": "New York",
+        "email": "john@example.com",
+        "avatar": null
+    }
+}
+```
+
+### 2. Update User Profile (PUT /users/update)
+```http
+PUT http://localhost:8082/users/update
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "userId": "user123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "userName": "johndoe",
+    "dob": "1990-01-01",
+    "phoneNumber": "+1234567890",
+    "location": "Los Angeles",
+    "email": "john@example.com"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "User profile updated successfully",
+    "result": {
+        "id": "1",
+        "userId": "user123",
+        "firstName": "John",
+        "lastName": "Doe",
+        "userName": "johndoe",
+        "dob": "1990-01-01",
+        "phoneNumber": "+1234567890",
+        "location": "Los Angeles",
+        "email": "john@example.com",
+        "avatar": null
+    }
+}
+```
+
+### 3. Get User Profile (GET /users/{userId})
+```http
+GET http://localhost:8082/users/user123
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "result": {
+        "id": "1",
+        "userId": "user123",
+        "firstName": "John",
+        "lastName": "Doe",
+        "userName": "johndoe",
+        "dob": "1990-01-01",
+        "phoneNumber": "+1234567890",
+        "location": "Los Angeles",
+        "email": "john@example.com",
+        "avatar": null
+    }
+}
+```
+
+### 4. Get All User Profiles (GET /users/me)
+```http
+GET http://localhost:8082/users/me
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "result": [
+        {
+            "id": "1",
+            "userId": "user123",
+            "firstName": "John",
+            "lastName": "Doe",
+            "userName": "johndoe",
+            "dob": "1990-01-01",
+            "phoneNumber": "+1234567890",
+            "location": "Los Angeles",
+            "email": "john@example.com",
+            "avatar": null
+        }
+    ]
+}
+```
+
+### 5. Upload Avatar (POST /users/avatar)
+```http
+POST http://localhost:8082/users/avatar
+Content-Type: multipart/form-data
+Authorization: Bearer <your_jwt_token>
+
+{
+    "userId": "user123",
+    "avatar": <file>
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Avatar uploaded successfully",
+    "result": {
+        "id": "1",
+        "userId": "user123",
+        "firstName": "John",
+        "lastName": "Doe",
+        "userName": "johndoe",
+        "dob": "1990-01-01",
+        "phoneNumber": "+1234567890",
+        "location": "Los Angeles",
+        "email": "john@example.com",
+        "avatar": "avatar.jpg"
+    }
+}
+```
+
+## Post Service (Port 8083)
+
+### 1. Create Post (POST /posts)
+```http
+POST http://localhost:8083/posts
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "userId": "user123",
+    "caption": "This is a test post",
+    "files": ["image1.jpg", "image2.jpg"],
+    "contentTypes": ["image/jpeg", "image/jpeg"],
+    "privacy": "PUBLIC"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Post created successfully",
+    "result": {
+        "postId": "1",
+        "userId": "user123",
+        "caption": "This is a test post",
+        "files": ["image1.jpg", "image2.jpg"],
+        "contentTypes": ["image/jpeg", "image/jpeg"],
+        "createdAt": "2024-03-26T10:00:00",
+        "updatedAt": "2024-03-26T10:00:00",
+        "privacy": "PUBLIC",
+        "listCommentId": []
+    }
+}
+```
+
+### 2. Get Post (GET /posts/{postId})
+```http
+GET http://localhost:8083/posts/1
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Post retrieved successfully",
+    "result": {
+        "postId": "1",
+        "userId": "user123",
+        "caption": "This is a test post",
+        "files": ["image1.jpg", "image2.jpg"],
+        "contentTypes": ["image/jpeg", "image/jpeg"],
+        "createdAt": "2024-03-26T10:00:00",
+        "updatedAt": "2024-03-26T10:00:00",
+        "privacy": "PUBLIC",
+        "listCommentId": []
+    }
+}
+```
+
+### 3. Get Posts (GET /posts)
+```http
+GET http://localhost:8083/posts?userId=user123&page=0&size=10&sortBy=createdAt&sortDirection=desc
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Posts retrieved successfully",
+    "result": {
+        "content": [
+            {
+                "postId": "1",
+                "userId": "user123",
+                "caption": "This is a test post",
+                "files": ["image1.jpg", "image2.jpg"],
+                "contentTypes": ["image/jpeg", "image/jpeg"],
+                "createdAt": "2024-03-26T10:00:00",
+                "updatedAt": "2024-03-26T10:00:00",
+                "privacy": "PUBLIC",
+                "listCommentId": []
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": true,
+                "unsorted": false,
+                "empty": false
+            }
+        },
+        "totalElements": 1,
+        "totalPages": 1,
+        "last": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": true,
+            "unsorted": false,
+            "empty": false
+        },
+        "numberOfElements": 1,
+        "first": true,
+        "empty": false
+    }
+}
+```
+
+### 4. Update Post (PUT /posts/{postId})
+```http
+PUT http://localhost:8083/posts/1
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "caption": "Updated test post",
+    "privacy": "PRIVATE"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Post updated successfully",
+    "result": {
+        "postId": "1",
+        "userId": "user123",
+        "caption": "Updated test post",
+        "files": ["image1.jpg", "image2.jpg"],
+        "contentTypes": ["image/jpeg", "image/jpeg"],
+        "createdAt": "2024-03-26T10:00:00",
+        "updatedAt": "2024-03-26T10:30:00",
+        "privacy": "PRIVATE",
+        "listCommentId": []
+    }
+}
+```
+
+### 5. Delete Post (DELETE /posts/{postId})
+```http
+DELETE http://localhost:8083/posts/1
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Post deleted successfully"
+}
+```
+
+## Comment Service (Port 8083)
+
+### 1. Create Comment (POST /comments)
+```http
+POST http://localhost:8083/comments
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "postId": "1",
+    "userId": "user123",
+    "content": "This is a test comment"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Comment created successfully",
+    "result": {
+        "commentId": "1",
+        "postId": "1",
+        "userId": "user123",
+        "content": "This is a test comment",
+        "createdAt": "2024-03-26T11:00:00",
+        "updatedAt": "2024-03-26T11:00:00"
+    }
+}
+```
+
+### 2. Get Comments (GET /comments/{postId})
+```http
+GET http://localhost:8083/comments/1?page=0&size=10&sortBy=createdAt&sortDirection=desc
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "postId": "1"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Comments retrieved successfully",
+    "result": {
+        "content": [
+            {
+                "commentId": "1",
+                "postId": "1",
+                "userId": "user123",
+                "content": "This is a test comment",
+                "createdAt": "2024-03-26T11:00:00",
+                "updatedAt": "2024-03-26T11:00:00"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": true,
+                "unsorted": false,
+                "empty": false
+            }
+        },
+        "totalElements": 1,
+        "totalPages": 1,
+        "last": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": true,
+            "unsorted": false,
+            "empty": false
+        },
+        "numberOfElements": 1,
+        "first": true,
+        "empty": false
+    }
+}
+```
+
+### 3. Update Comment (PUT /comments/{commentId})
+```http
+PUT http://localhost:8083/comments/1
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+    "commentId": "1",
+    "content": "Updated test comment"
+}
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Comment updated successfully",
+    "result": {
+        "commentId": "1",
+        "postId": "1",
+        "userId": "user123",
+        "content": "Updated test comment",
+        "createdAt": "2024-03-26T11:00:00",
+        "updatedAt": "2024-03-26T11:30:00"
+    }
+}
+```
+
+## Search Service (Port 8085)
+
+### 1. Search Content (GET /search)
+```http
+GET http://localhost:8085/search?query=test&type=all&page=0&size=10&sortBy=createdAt&sortOrder=desc
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Search completed successfully",
+    "result": {
+        "users": [
+            {
+                "id": "1",
+                "userId": "user123",
+                "firstName": "John",
+                "lastName": "Doe",
+                "userName": "johndoe",
+                "dob": "1990-01-01",
+                "phoneNumber": "+1234567890",
+                "location": "New York",
+                "email": "john@example.com",
+                "avatar": null
+            }
+        ],
+        "posts": [
+            {
+                "postId": "1",
+                "userId": "user123",
+                "caption": "This is a test post",
+                "files": ["image1.jpg", "image2.jpg"],
+                "contentTypes": ["image/jpeg", "image/jpeg"],
+                "createdAt": "2024-03-26T10:00:00",
+                "updatedAt": "2024-03-26T10:00:00",
+                "privacy": "PUBLIC",
+                "listCommentId": ["comment1", "comment2"]
+            }
+        ],
+        "totalHits": 2,
+        "page": 0,
+        "size": 10
+    }
+}
+```
+
+### 2. Reindex All Data (POST /search/reindex)
+```http
+POST http://localhost:8085/search/reindex
+Authorization: Bearer <your_jwt_token>
+```
+
+Example Response:
+```json
+{
+    "code": 200,
+    "message": "Reindexing completed successfully"
+}
+```
+
+## Notes:
+1. Replace <your_jwt_token> with a valid JWT token from the authentication service
+2. All services require authentication except for:
+   - /auth/register
+   - /auth/login
+   - /auth/refreshToken
+   - /actuator/**
+3. The reindex endpoint requires ADMIN role
+4. All search endpoints support pagination and sorting
+5. The search type can be: "all", "users", or "posts"
+6. Sort order can be "asc" or "desc"
+7. Default page size is 10
+8. Default sort field is "createdAt"
+9. Default sort order is "desc" 

@@ -1,5 +1,6 @@
 package com.socialmedia.user_service.controller;
 
+import com.socialmedia.user_service.dto.request.AvatarUploadRequest;
 import com.socialmedia.user_service.dto.request.UserProfileCreationRequest;
 import com.socialmedia.user_service.dto.request.UserProfileUpdationRequest;
 import com.socialmedia.user_service.dto.response.ApiResponse;
@@ -8,6 +9,8 @@ import com.socialmedia.user_service.service.UserProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +21,24 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileController {
     UserProfileService userProfileService;
+    
+    @PostMapping("/avatar")
+    public ApiResponse<UserProfileResponse> uploadAvatar(
+            @ModelAttribute AvatarUploadRequest request) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .code(200)
+                .message("Avatar uploaded successfully")
+                .result(userProfileService.updateAvatar(request))
+                .build();
+    }
+    
+    @GetMapping("/{userId}/avatar")
+    public ResponseEntity<byte[]> getAvatar(@PathVariable String userId) {
+        byte[] avatar = userProfileService.getAvatar(userId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(avatar);
+    }
 
     @PostMapping("/create")
     public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody UserProfileCreationRequest request) {

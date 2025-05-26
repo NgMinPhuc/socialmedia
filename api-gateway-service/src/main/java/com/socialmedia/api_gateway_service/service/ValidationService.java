@@ -18,7 +18,7 @@ public class ValidationService {
 
     public Mono<ApiResponse<ValidateTokenResponse>> validateToken(String token) {
         return validationClient.validateToken(ValidateTokenRequest.builder()
-                        .token(token)
+                .token(token)
                 .build());
     }
 }

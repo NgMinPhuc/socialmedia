@@ -1,1 +1,24 @@
-spring.application.name=post-service
+server:
+  port: 8083
+
+spring:
+  application:
+    name: post-service
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/postDB?authSource=admin
+      auto-index-creation: true
+
+app:
+  user-service:
+    url: http://user-service:8082
+  auth-service:
+    url: http://auth-service:8081
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
