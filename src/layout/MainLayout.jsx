@@ -5,7 +5,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import Loading from '@/components/Loading';
 
 const MainLayout = () => {
-  const { isAuthenticated } = useAuthGuard(true);
+  const { isAuthenticated } = useAuthGuard(false);
   if (!isAuthenticated) {
     return <Loading />;
   }

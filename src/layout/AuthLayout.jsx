@@ -3,7 +3,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import Loading from '@/components/Loading';
 
 const AuthLayout = () => {
-  const { isAuthenticated } = useAuthGuard(false);
+  const { isAuthenticated } = useAuthGuard(true);
 
   if (isAuthenticated) {
     return <Navigate to="/" />;
