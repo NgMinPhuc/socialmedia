@@ -36,7 +36,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     @NonFinal
     private String[] publicEndpoints = {
-            "/auth/.*"
+            "/auth/login",
+            "/auth/register", 
+            "/auth/refreshToken",
+            "/auth/validateToken",
+            "/actuator/.*"
     };
 
     @Value("${app.api-prefix}")
@@ -76,8 +80,24 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     private boolean isPublicEndpoint(ServerHttpRequest request) {
         String path = request.getURI().getPath();
-        return Arrays.stream(publicEndpoints)
-                .anyMatch(s -> path.matches("/" + apiPrefix + s));
+        log.info("Checking path: {} against patterns with prefix: {}", path, apiPrefix);
+        
+        // For API path like "/api/v1/auth/register"
+        // We need to check it against patterns like "/auth/register" with prefix "api/v1" 
+        boolean isPublic = false;
+        
+        for (String endpoint : publicEndpoints) {
+            String fullPattern = "/" + apiPrefix + endpoint;
+            String plainPattern = fullPattern.replace(".*", "");
+            log.info("Testing if path '{}' starts with '{}'", path, plainPattern);
+            if (path.startsWith(plainPattern)) {
+                isPublic = true;
+                break;
+            }
+        }
+        
+        log.info("Path '{}' is public: {}", path, isPublic);
+        return isPublic;
     }
 
 

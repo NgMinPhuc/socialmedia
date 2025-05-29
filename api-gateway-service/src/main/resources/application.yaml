@@ -1,5 +1,5 @@
 server:
-  port: 8091
+  port: 8080
 
 app:
   api-prefix: api/v1
@@ -12,12 +12,13 @@ spring:
     port: 6379
   cloud:
     gateway:
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 10
-            redis-rate-limiter.burstCapacity: 20
-            redis-rate-limiter.requestedTokens: 1
+      # Disable rate limiting temporarily
+      # default-filters:
+      #   - name: RequestRateLimiter
+      #     args:
+      #       redis-rate-limiter.replenishRate: 10
+      #       redis-rate-limiter.burstCapacity: 20
+      #       redis-rate-limiter.requestedTokens: 1
       routes:
         - id: auth-service
           uri: lb://auth-service
