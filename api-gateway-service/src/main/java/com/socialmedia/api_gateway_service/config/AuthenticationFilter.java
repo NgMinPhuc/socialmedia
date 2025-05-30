@@ -32,14 +32,19 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     ValidationService validationService;
-    ObjectMapper objectMapper;
-
-    @NonFinal
+    ObjectMapper objectMapper;    @NonFinal
     private String[] publicEndpoints = {
             "/auth/login",
             "/auth/register", 
             "/auth/refreshToken",
             "/auth/validateToken",
+            "/health",
+            "/auth/health",
+            "/users/health",
+            "/posts/health",
+            "/search/health",
+            "/notifications/health", 
+            "/chat/health",
             "/actuator/.*"
     };
 

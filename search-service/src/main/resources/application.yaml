@@ -38,10 +38,22 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
+          issuer-uri: http://localhost:8081
+          jwk-set-uri: http://localhost:8081/.well-known/jwks.json
   cloud:
     discovery:
       enabled: true
+
+jwt:
+  signerKey: "oZNYys2LweTrJc3DqEp+zFOz8LbqbqTNzOEAE5eHIs65gnJEN3rlAGpzk2P1hYFP"
+  valid-duration: 3600
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
 
 app:
   post-service:
@@ -80,13 +92,6 @@ resilience4j:
         retryExceptions:
           - org.springframework.web.client.ResourceAccessException
           - java.util.concurrent.TimeoutException
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://eureka-server:8761/eureka/
-  instance:
-    prefer-ip-address: true
 
 logging:
   level:

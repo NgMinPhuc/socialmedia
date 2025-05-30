@@ -5,6 +5,10 @@ spring:
   application:
     name: notification-service
 
+jwt:
+  signerKey: "oZNYys2LweTrJc3DqEp+zFOz8LbqbqTNzOEAE5eHIs65gnJEN3rlAGpzk2P1hYFP"
+  valid-duration: 3600
+
 eureka:
   client:
     service-url:

@@ -78,10 +78,10 @@ func main() {
 	router := gin.Default()
 
 	// Health check endpoints (no auth required)
-	router.GET("/health", healthHandler.Health)
-	router.GET("/health/info", healthHandler.Info)
-	router.GET("/health/live", healthHandler.LivenessProbe)
-	router.GET("/health/ready", healthHandler.ReadinessProbe)
+	router.GET("/chat/health", healthHandler.Health)
+	router.GET("/chat/health/info", healthHandler.Info)
+	router.GET("/chat/health/live", healthHandler.LivenessProbe)
+	router.GET("/chat/health/ready", healthHandler.ReadinessProbe)
 
 	// CORS middleware
 	allowOrigins := strings.Split(os.Getenv("ALLOW_ORIGINS"), ",")

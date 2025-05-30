@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -78,20 +79,44 @@ public class UserProfileService {
     }
 
     public UserProfileResponse updateUserProfile(UserProfileUpdationRequest request) {
-        UserProfile userProfile = userProfileRepository.findById(request.getId())
+        UserProfile userProfile = userProfileRepository.findByUserId(request.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        userProfileMapper.toUserProfile(request);
+        
+        // Map request values to existing userProfile
+        UserProfile updatedProfile = userProfileMapper.toUserProfile(request);
+        
+        // Update existing profile with new values
+        if (updatedProfile.getFirstName() != null) userProfile.setFirstName(updatedProfile.getFirstName());
+        if (updatedProfile.getLastName() != null) userProfile.setLastName(updatedProfile.getLastName());
+        if (updatedProfile.getUserName() != null) userProfile.setUserName(updatedProfile.getUserName());
+        if (updatedProfile.getDob() != null) userProfile.setDob(updatedProfile.getDob());
+        if (updatedProfile.getPhoneNumber() != null) userProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
+        if (updatedProfile.getLocation() != null) userProfile.setLocation(updatedProfile.getLocation());
+        if (updatedProfile.getEmail() != null) userProfile.setEmail(updatedProfile.getEmail());
+        
         userProfile = userProfileRepository.save(userProfile);
 
         return userProfileMapper.toUserProfileResponse(userProfile);
     }
 
     public UserProfileResponse getUserProfile(String userId) {
-        UserProfile userProfile = userProfileRepository.findById(userId)
+        UserProfile userProfile = userProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         return userProfileMapper.toUserProfileResponse(userProfile);
+    }
+
+    public UserProfileResponse getMyProfile() {
+        // Get current user from security context
+        String currentUserId = getCurrentUserId();
+        UserProfile userProfile = userProfileRepository.findByUserId(currentUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return userProfileMapper.toUserProfileResponse(userProfile);
+    }
+
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     public List<UserProfileResponse> getAllUserProfile() {

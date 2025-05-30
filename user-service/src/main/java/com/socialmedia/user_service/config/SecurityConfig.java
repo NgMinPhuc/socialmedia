@@ -17,6 +17,8 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
             "/users/create",
+            "/users/health",
+            "/actuator/**"
     };
 
     @Autowired
@@ -27,6 +29,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(request -> {
             request
                     .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+                    .permitAll();
+            request
+                    .requestMatchers(HttpMethod.GET, "/health", "/actuator/**")
                     .permitAll();
             request
                     .anyRequest()

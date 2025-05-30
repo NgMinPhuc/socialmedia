@@ -67,6 +67,14 @@ public class UserProfileController {
     }
 
     @GetMapping("/me")
+    public ApiResponse<UserProfileResponse> getMyProfile() {
+        return ApiResponse.<UserProfileResponse>builder()
+                .code(200)
+                .result(userProfileService.getMyProfile())
+                .build();
+    }
+
+    @GetMapping("/all")
     public ApiResponse<List<UserProfileResponse>> getAllUserProfile() {
         return ApiResponse.<List<UserProfileResponse>>builder()
                 .code(200)

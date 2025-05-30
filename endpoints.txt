@@ -1,0 +1,475 @@
+# Social Media Microservices API Endpoints
+
+## API Gateway
+Base URL: http://localhost:8080
+All endpoints are prefixed with `/api/v1` through the API Gateway
+
+## Service Mapping Through API Gateway:
+- Auth Service: `/api/v1/auth/**` → `auth-service:8081`
+- User Service: `/api/v1/users/**` → `user-service:8082`
+- Post Service: `/api/v1/feed/**` → `post-service:8083`
+- Search Service: `/api/v1/search/**` → `search-service:8085`
+- Notification Service: `/api/v1/notifications/**` → `notification-service:8086`
+- Chat Service: `/api/v1/chat/**` → `chat-service:8084`
+
+---
+
+## Authentication Service (Port 8081)
+**Base Path:** `/auth`
+
+### Public Endpoints (No Authentication Required)
+#### 1. Login
+- **POST** `/auth/login`
+- **Description:** Authenticate user and get JWT token
+- **Request Body:**
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "code": 200,
+    "result": {
+      "username": "string",
+      "accessToken": "jwt_token",
+      "refreshToken": "refresh_token"
+    }
+  }
+  ```
+
+#### 2. Register
+- **POST** `/auth/register`
+- **Description:** Register new user account
+- **Request Body:**
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "email": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "dob": "date",
+    "phoneNumber": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "code": 200,
+    "result": {
+      "message": "User registered successfully"
+    }
+  }
+  ```
+
+#### 3. Refresh Token
+- **POST** `/auth/refreshToken`
+- **Description:** Refresh JWT access token using refresh token
+- **Request Body:**
+  ```json
+  {
+    "refreshToken": "string"
+  }
+  ```
+
+#### 4. Validate Token
+- **POST** `/auth/validateToken`
+- **Description:** Validate JWT token (used by other services)
+- **Request Body:**
+  ```json
+  {
+    "token": "string"
+  }
+  ```
+
+### Protected Endpoints (Authentication Required)
+#### 5. Logout
+- **POST** `/auth/logout`
+- **Description:** Logout user and invalidate tokens
+- **Request Body:**
+  ```json
+  {
+    "refreshToken": "string"
+  }
+  ```
+
+#### 6. Change Password
+- **POST** `/auth/changePassword`
+- **Description:** Change user password
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+  ```json
+  {
+    "oldPassword": "string",
+    "newPassword": "string"
+  }
+  ```
+
+#### 7. Health Check
+- **GET** `/auth/health`
+- **Description:** Service health status
+
+---
+
+## User Service (Port 8082)
+**Base Path:** `/users`
+
+### Protected Endpoints (Authentication Required)
+#### 1. Create User Profile
+- **POST** `/users/create`
+- **Description:** Create user profile after registration
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "userName": "string",
+    "dob": "date",
+    "phoneNumber": "string",
+    "location": "string",
+    "email": "string"
+  }
+  ```
+
+#### 2. Update User Profile
+- **PUT** `/users/update`
+- **Description:** Update user profile information
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "userName": "string",
+    "dob": "date",
+    "phoneNumber": "string",
+    "location": "string",
+    "email": "string"
+  }
+  ```
+
+#### 3. Get User Profile
+- **GET** `/users/{userId}`
+- **Description:** Get user profile by user ID
+- **Path Parameters:** `userId` - User ID
+
+#### 4. Get All User Profiles
+- **GET** `/users/me`
+- **Description:** Get all user profiles (admin function)
+
+#### 5. Upload Avatar
+- **POST** `/users/avatar`
+- **Description:** Upload user avatar image
+- **Content-Type:** `multipart/form-data`
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "avatar": "MultipartFile"
+  }
+  ```
+
+#### 6. Get Avatar
+- **GET** `/users/{userId}/avatar`
+- **Description:** Get user avatar image
+- **Path Parameters:** `userId` - User ID
+- **Response:** Binary image data
+
+#### 7. Health Check
+- **GET** `/users/health`
+- **Description:** Service health status
+
+---
+
+## Post Service (Port 8083)
+**Base Path:** `/feed/posts` and `/feed/comments`
+**API Gateway Path:** `/api/v1/feed/**`
+**Note:** Service has context-path `/feed`, so all endpoints are prefixed with `/feed`
+
+### Post Endpoints (Authentication Required)
+#### 1. Create Post
+- **POST** `/api/v1/feed/posts`
+- **Description:** Create a new post
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "caption": "string",
+    "files": ["string"],
+    "contentTypes": ["string"],
+    "privacy": "public|friends|private"
+  }
+  ```
+
+#### 2. Get Post
+- **GET** `/api/v1/feed/posts/{postId}`
+- **Description:** Get specific post by ID
+- **Path Parameters:** `postId` - Post ID
+
+#### 3. Get Posts
+- **GET** `/api/v1/feed/posts`
+- **Description:** Get paginated list of posts
+- **Query Parameters:**
+  - `userId` (optional) - Filter by user ID
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: createdAt) - Sort field
+  - `sortDirection` (default: desc) - Sort direction
+
+#### 4. Update Post
+- **PUT** `/api/v1/feed/posts/{postId}`
+- **Description:** Update existing post
+- **Path Parameters:** `postId` - Post ID
+- **Request Body:**
+  ```json
+  {
+    "caption": "string",
+    "files": ["string"],
+    "contentTypes": ["string"],
+    "privacy": "public|friends|private"
+  }
+  ```
+
+#### 5. Delete Post
+- **DELETE** `/api/v1/feed/posts/{postId}`
+- **Description:** Delete a post
+- **Path Parameters:** `postId` - Post ID
+
+### Comment Endpoints (Authentication Required)
+#### 6. Create Comment
+- **POST** `/api/v1/feed/comments`
+- **Description:** Add comment to a post
+- **Request Body:**
+  ```json
+  {
+    "postId": "string",
+    "userId": "string",
+    "content": "string"
+  }
+  ```
+
+#### 7. Get Comments
+- **GET** `/api/v1/feed/comments/{postId}`
+- **Description:** Get comments for a post
+- **Path Parameters:** `postId` - Post ID
+- **Query Parameters:**
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: createdAt) - Sort field
+  - `sortDirection` (default: desc) - Sort direction
+
+#### 8. Update Comment
+- **PUT** `/api/v1/feed/comments/{commentId}`
+- **Description:** Update existing comment
+- **Path Parameters:** `commentId` - Comment ID
+- **Request Body:**
+  ```json
+  {
+    "commentId": "string",
+    "content": "string"
+  }
+  ```
+
+#### 9. Delete Comment
+- **DELETE** `/api/v1/feed/comments/{commentId}`
+- **Description:** Delete a comment
+- **Path Parameters:** `commentId` - Comment ID
+- **Request Body:**
+  ```json
+  {
+    "commentId": "string"
+  }
+  ```
+
+#### 10. Health Check
+- **GET** `/api/v1/feed/health`
+- **Description:** Service health status
+
+---
+
+## Search Service (Port 8085)
+**Base Path:** `/search`
+
+### Search Endpoints (Authentication Required)
+#### 1. Search Content
+- **GET** `/search`
+- **Description:** Search posts and users with advanced filtering
+- **Query Parameters:**
+  - `query` (required) - Search query string
+  - `type` (default: all) - Search type: all, posts, users
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: createdAt) - Sort field
+  - `sortOrder` (default: desc) - Sort direction
+- **Response:**
+  ```json
+  {
+    "code": 200,
+    "message": "Search completed successfully",
+    "result": {
+      "posts": [
+        {
+          "postId": "string",
+          "userId": "string",
+          "caption": "string",
+          "contentTypes": ["string"],
+          "privacy": "string",
+          "listCommentId": ["string"]
+        }
+      ],
+      "users": [
+        {
+          "id": "string",
+          "userId": "string",
+          "firstName": "string",
+          "lastName": "string",
+          "userName": "string",
+          "email": "string",
+          "avatar": "string"
+        }
+      ],
+      "totalHits": 0
+    }
+  }
+  ```
+
+#### 2. Reindex Data (Admin Only)
+- **POST** `/search/reindex`
+- **Description:** Reindex all posts and users in Elasticsearch
+- **Authorization:** Requires ADMIN role
+
+#### 3. Health Check
+- **GET** `/search/health`
+- **Description:** Service health status
+
+---
+
+## Notification Service (Port 8086)
+**Base Path:** `/notifications`
+
+### Note: Currently only has health endpoint - notification functionality to be implemented
+
+#### 1. Health Check
+- **GET** `/health`
+- **Description:** Service health status
+
+---
+
+## Chat Service (Port 8084) - Go Service
+**Base Path:** `/api/chat`
+
+### Public Endpoints
+#### 1. Health Check
+- **GET** `/chat/health`
+- **Description:** Basic health status
+
+#### 2. Service Info
+- **GET** `/chat/health/info`
+- **Description:** Detailed service information
+
+#### 3. Liveness Probe
+- **GET** `/chat/health/live`
+- **Description:** Kubernetes liveness probe
+
+#### 4. Readiness Probe
+- **GET** `/chat/health/ready`
+- **Description:** Kubernetes readiness probe (checks MongoDB)
+
+### Protected Endpoints (Authentication Required)
+#### 5. WebSocket Connection
+- **GET** `/api/chat/ws`
+- **Description:** Establish WebSocket connection for real-time chat
+- **Protocol:** WebSocket upgrade
+- **Headers:** `Authorization: Bearer <token>`
+
+#### 6. Get Conversation
+- **GET** `/api/chat/conversations/{otherID}`
+- **Description:** Get conversation history between two users
+- **Path Parameters:** `otherID` - Other user's ID
+- **Query Parameters:**
+  - `limit` (default: 50) - Number of messages to retrieve
+
+#### 7. Mark Messages as Read
+- **POST** `/api/chat/conversations/{fromID}/read`
+- **Description:** Mark messages from a user as read
+- **Path Parameters:** `fromID` - Sender user's ID
+
+#### 8. Get Unread Count
+- **GET** `/api/chat/unread`
+- **Description:** Get count of unread messages for current user
+
+---
+
+## Health Endpoints Summary
+
+All services provide health check endpoints for monitoring:
+
+- **Auth Service:** `GET /auth/health`
+- **User Service:** `GET /users/health`
+- **Post Service:** `GET /feed/health`
+- **Search Service:** `GET /search/health`
+- **Notification Service:** `GET /health`
+- **Chat Service:** `GET /chat/health`
+
+Through API Gateway:
+- `GET /api/v1/auth/health`
+- `GET /api/v1/users/health`
+- `GET /api/v1/feed/health`
+- `GET /api/v1/search/health`
+- `GET /api/v1/notifications/health`
+- `GET /api/v1/chat/health`
+
+---
+
+## Authentication Flow
+
+1. **Register:** `POST /api/v1/auth/register`
+2. **Login:** `POST /api/v1/auth/login` → Returns JWT access token
+3. **Use Token:** Include in header: `Authorization: Bearer <access_token>`
+4. **Refresh:** `POST /api/v1/auth/refreshToken` when token expires
+5. **Logout:** `POST /api/v1/auth/logout`
+
+---
+
+## Error Handling
+
+All services return standardized error responses:
+```json
+{
+  "code": 400,
+  "message": "Error description",
+  "result": null
+}
+```
+
+Common HTTP status codes:
+- 200: Success
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 500: Internal Server Error
+
+---
+
+## Database Information
+
+- **Auth Service:** PostgreSQL (user authentication data)
+- **User Service:** PostgreSQL (user profiles)
+- **Post Service:** PostgreSQL (posts and comments)
+- **Search Service:** Elasticsearch (indexed search data)
+- **Notification Service:** Redis (notifications queue)
+- **Chat Service:** MongoDB (chat messages)
+
+---
+
+## Service Discovery
+
+All services register with Eureka Server on port 8761:
+- **Eureka Dashboard:** http://localhost:8761
+
+Services communicate with each other using service names registered in Eureka.

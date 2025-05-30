@@ -44,8 +44,11 @@ public class AuthService {
 
     // Login API
     public LoginResponse login(LoginRequest request) {
-
-        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getEmail())
+        
+        // Determine the actual input value (username or email)
+        String usernameOrEmailInput = request.getUsername() != null ? request.getUsername() : request.getEmail();
+        
+        User user = userRepository.findByUsernameOrEmailInput(usernameOrEmailInput)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Use the PasswordEncoder bean from SecurityConfig
