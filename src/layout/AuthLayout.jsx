@@ -1,12 +1,17 @@
-import { Outlet } from 'react-router-dom';
-import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { Outlet, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
-
 const AuthLayout = () => {
-  const { isAuthenticated } = useAuthGuard(true);
+  const { user, loading } = useAuth();
 
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
+  if (loading) {
+    return (
+      <Loading />
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />;
   }
 
   return (

@@ -59,6 +59,69 @@ const userApi = {
         } catch (error) {
             throw error;
         }
+    },
+
+    getUserByUsername: async (username) => {
+        try {
+            const response = await axiosInstance.get(`/users/username/${username}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getFollowers: async (username) => {
+        try {
+            const response = await axiosInstance.get(`/users/${username}/followers`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getFollowing: async (username) => {
+        try {
+            const response = await axiosInstance.get(`/users/${username}/following`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getUserPosts: async (username) => {
+        try {
+            const response = await axiosInstance.get(`/users/${username}/posts`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateSettings: async (settingsData) => {
+        try {
+            const response = await axiosInstance.put('/users/settings', settingsData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    changePassword: async (passwordData) => {
+        try {
+            const response = await axiosInstance.put('/users/password', passwordData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    deleteAccount: async () => {
+        try {
+            const response = await axiosInstance.delete('/users/account');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 };
 

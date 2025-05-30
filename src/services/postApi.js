@@ -4,6 +4,7 @@ const postApi = {
     createPost: async (postData) => {
         try {
             const formData = new FormData();
+            // Kiểm tra xem postData có chứa media hay không (media = hình ảnh hoặc video)
             if (postData.media) {
                 formData.append('media', postData.media);
             }

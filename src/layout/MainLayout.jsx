@@ -1,13 +1,20 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
 
 const MainLayout = () => {
-  const { isAuthenticated } = useAuthGuard(false);
-  if (!isAuthenticated) {
+  const { user, loading } = useAuth();
+  
+  // Show loading while checking auth
+  if (loading) {
     return <Loading />;
+  }
+  
+  // Redirect to login if not authenticated
+  if (user) {
+    return <Navigate to="/auth/login" replace />;
   }
 
   return (

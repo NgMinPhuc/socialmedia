@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '@/services/authService';
+import authService from '@/services/authService';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Cải thiện tiếp theo: Xem xét tránh useEffect chạy lại vô tận khi user thay đổi, đồng bộ tài khoản giữa nhiều tab. 
   useEffect(() => {
     const token = authService.getToken();
     if (token && !user) {
@@ -16,7 +18,6 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
     }
   }, [user]);
-
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
@@ -89,8 +90,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     forgotPassword,
-    resetPassword,
-    isAuthenticated: authService.isAuthenticated()
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
