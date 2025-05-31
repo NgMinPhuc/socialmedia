@@ -1,0 +1,845 @@
+# Social Media Microservices - Backend API Endpoints Documentation
+
+This document provides a comprehensive list of all backend endpoints across the microservices architecture with JSON samples for testing each endpoint.
+
+## Architecture Overview
+
+**API Gateway:** `http://localhost:8080`
+**Base Path:** `/api/v1/*`
+
+### Service Routing via API Gateway:
+- **Authentication Service (8081)**: `/api/v1/auth/**` → `/auth/**`
+- **User Service (8082)**: `/api/v1/users/**` → `/users/**`
+- **Post Service (8083)**: `/api/v1/feed/**` → `/posts/**` & `/comments/**`
+- **Chat Service (8084)**: `/api/v1/chat/**` → `/api/chat/**`
+- **Search Service (8085)**: `/api/v1/search/**` → `/search/**`
+- **Notification Service (8086)**: `/api/v1/notifications/**` → `/health/**`
+- **Eureka Server (8761)**: Service Discovery
+
+## Authentication & Authorization
+
+All endpoints (except health checks and registration/login) require JWT authentication:
+```
+Authorization: Bearer <jwt_token>
+```
+
+---
+
+## 1. Authentication Service (Port: 8081)
+
+**Base Path:** `/api/v1/auth` (via Gateway) or direct `/auth`
+
+### 1.1 Register User
+- **Endpoint:** `POST /api/v1/auth/register`
+- **Description:** Register a new user account
+- **Authentication:** Not required
+- **Request Body:**
+```json
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "dob": "1990-01-01",
+  "phoneNumber": "+1234567890"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "User registered successfully",
+  "result": {
+    "message": "Registration successful"
+  }
+}
+```
+
+### 1.2 Login User
+- **Endpoint:** `POST /api/v1/auth/login`
+- **Description:** Authenticate user and get JWT tokens
+- **Authentication:** Not required
+- **Request Body:**
+```json
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "result": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "tokenType": "Bearer",
+    "expiresIn": 3600
+  }
+}
+```
+
+### 1.3 Refresh Token
+- **Endpoint:** `POST /api/v1/auth/refreshToken`
+- **Description:** Refresh expired access token
+- **Authentication:** Not required
+- **Request Body:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+- **Response:** Same as login response
+
+### 1.4 Logout User
+- **Endpoint:** `POST /api/v1/auth/logout`
+- **Description:** Logout user and invalidate tokens
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Logout successful"
+}
+```
+
+### 1.5 Validate Token
+- **Endpoint:** `POST /api/v1/auth/validateToken`
+- **Description:** Validate JWT token
+- **Authentication:** Not required
+- **Request Body:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "result": {
+    "valid": true,
+    "userId": "user123",
+    "username": "johndoe"
+  }
+}
+```
+
+### 1.6 Change Password
+- **Endpoint:** `POST /api/v1/auth/changePassword`
+- **Description:** Change user password
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "oldPassword": "password123",
+  "newPassword": "newpassword123",
+  "confirmPassword": "newpassword123"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Password changed successfully"
+}
+```
+
+### 1.7 Health Check
+- **Endpoint:** `GET /auth/health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP"
+}
+```
+
+---
+
+## 2. User Service (Port: 8082)
+
+**Base Path:** `/api/v1/users` (via Gateway) or direct `/users`
+
+### 2.1 Create User Profile
+- **Endpoint:** `POST /api/v1/users/create`
+- **Description:** Create a new user profile
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "userId": "user123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "userName": "johndoe",
+  "dob": "1990-01-01",
+  "phoneNumber": "+1234567890",
+  "location": "New York",
+  "email": "john@example.com",
+  "bio": "Software developer passionate about technology"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "User profile created successfully",
+  "result": {
+    "id": "user123",
+    "userName": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe",
+    "fullName": "John Doe",
+    "email": "john@example.com",
+    "dob": "1990-01-01",
+    "phoneNumber": "+1234567890",
+    "location": "New York",
+    "bio": "Software developer passionate about technology",
+    "avatar": null,
+    "joinDate": "2023-10-27T10:00:00Z"
+  }
+}
+```
+
+### 2.2 Update User Profile
+- **Endpoint:** `PUT /api/v1/users/update`
+- **Description:** Update existing user profile
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "userId": "user123",
+  "firstName": "John",
+  "lastName": "Smith",
+  "userName": "johnsmith",
+  "location": "Los Angeles",
+  "bio": "Updated bio information"
+}
+```
+- **Response:** Same structure as create profile response
+
+### 2.3 Get User Profile by ID
+- **Endpoint:** `GET /api/v1/users/{userId}`
+- **Description:** Retrieve specific user profile
+- **Authentication:** Required
+- **Path Parameter:** `userId` - User ID to retrieve
+- **Response:** Same structure as create profile response
+
+### 2.4 Get My Profile
+- **Endpoint:** `GET /api/v1/users/me`
+- **Description:** Get current authenticated user's profile
+- **Authentication:** Required
+- **Response:** Same structure as create profile response
+
+### 2.5 Get All User Profiles
+- **Endpoint:** `GET /api/v1/users/all`
+- **Description:** Retrieve all user profiles
+- **Authentication:** Required
+- **Response:**
+```json
+{
+  "code": 200,
+  "result": [
+    {
+      "id": "user123",
+      "userName": "johndoe",
+      "firstName": "John",
+      "lastName": "Doe",
+      "fullName": "John Doe",
+      "email": "john@example.com",
+      "location": "New York",
+      "bio": "Software developer",
+      "avatar": null,
+      "joinDate": "2023-10-27T10:00:00Z"
+    }
+  ]
+}
+```
+
+### 2.6 Upload Avatar
+- **Endpoint:** `POST /api/v1/users/avatar`
+- **Description:** Upload user avatar image
+- **Authentication:** Required
+- **Request:** `multipart/form-data`
+```
+Content-Type: multipart/form-data
+
+--boundary123
+Content-Disposition: form-data; name="userId"
+
+user123
+--boundary123
+Content-Disposition: form-data; name="avatar"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+[binary image data]
+--boundary123--
+```
+- **Response:** Same structure as create profile response
+
+### 2.7 Get Avatar
+- **Endpoint:** `GET /api/v1/users/{userId}/avatar`
+- **Description:** Retrieve user avatar image
+- **Authentication:** Required
+- **Path Parameter:** `userId` - User ID
+- **Response:** Binary image data (image/jpeg, image/png, etc.)
+
+### 2.8 Health Check
+- **Endpoint:** `GET /users/health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP"
+}
+```
+
+---
+
+## 3. Post Service (Port: 8083)
+
+**Base Path:** `/api/v1/feed` (via Gateway) or direct `/posts` & `/comments`
+
+### 3.1 Create Post
+- **Endpoint:** `POST /api/v1/feed/posts`
+- **Description:** Create a new post
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "userId": "user123",
+  "caption": "This is my first post!",
+  "files": ["image1.jpg", "video1.mp4"],
+  "contentTypes": ["image/jpeg", "video/mp4"],
+  "privacy": "PUBLIC"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Post created successfully",
+  "result": {
+    "postId": "post123",
+    "userId": "user123",
+    "caption": "This is my first post!",
+    "files": ["image1.jpg", "video1.mp4"],
+    "contentTypes": ["image/jpeg", "video/mp4"],
+    "privacy": "PUBLIC",
+    "listCommentId": [],
+    "createdAt": "2023-10-27T10:00:00Z",
+    "updatedAt": "2023-10-27T10:00:00Z"
+  }
+}
+```
+
+### 3.2 Get Post by ID
+- **Endpoint:** `GET /api/v1/feed/posts/{postId}`
+- **Description:** Retrieve specific post
+- **Authentication:** Required
+- **Path Parameter:** `postId` - Post ID
+- **Response:** Same structure as create post response
+
+### 3.3 Get Posts (Feed)
+- **Endpoint:** `GET /api/v1/feed/posts`
+- **Description:** Get paginated list of posts
+- **Authentication:** Required
+- **Query Parameters:**
+  - `userId` (optional) - Filter by user ID
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: "createdAt") - Sort field
+  - `sortDirection` (default: "desc") - Sort direction
+- **Example:** `GET /api/v1/feed/posts?userId=user123&page=0&size=5&sortBy=createdAt&sortDirection=desc`
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Posts retrieved successfully",
+  "result": {
+    "content": [
+      {
+        "postId": "post123",
+        "userId": "user123",
+        "caption": "This is my first post!",
+        "files": ["image1.jpg"],
+        "contentTypes": ["image/jpeg"],
+        "privacy": "PUBLIC",
+        "listCommentId": ["comment1", "comment2"],
+        "createdAt": "2023-10-27T10:00:00Z",
+        "updatedAt": "2023-10-27T10:00:00Z"
+      }
+    ],
+    "pageable": {
+      "sort": {
+        "sorted": true,
+        "unsorted": false
+      },
+      "pageNumber": 0,
+      "pageSize": 10
+    },
+    "totalElements": 1,
+    "totalPages": 1,
+    "first": true,
+    "last": true
+  }
+}
+```
+
+### 3.4 Update Post
+- **Endpoint:** `PUT /api/v1/feed/posts/{postId}`
+- **Description:** Update existing post
+- **Authentication:** Required
+- **Path Parameter:** `postId` - Post ID to update
+- **Request Body:**
+```json
+{
+  "caption": "Updated post caption",
+  "privacy": "PRIVATE"
+}
+```
+- **Response:** Same structure as create post response
+
+### 3.5 Delete Post
+- **Endpoint:** `DELETE /api/v1/feed/posts/{postId}`
+- **Description:** Delete a post
+- **Authentication:** Required
+- **Path Parameter:** `postId` - Post ID to delete
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Post deleted successfully"
+}
+```
+
+### 3.6 Create Comment
+- **Endpoint:** `POST /api/v1/feed/comments`
+- **Description:** Add comment to a post
+- **Authentication:** Required
+- **Request Body:**
+```json
+{
+  "postId": "post123",
+  "userId": "user123",
+  "content": "This is a great post!"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Comment created successfully",
+  "result": {
+    "commentId": "comment123",
+    "postId": "post123",
+    "userId": "user123",
+    "content": "This is a great post!",
+    "createdAt": "2023-10-27T10:00:00Z",
+    "updatedAt": "2023-10-27T10:00:00Z"
+  }
+}
+```
+
+### 3.7 Get Comments by Post ID
+- **Endpoint:** `GET /api/v1/feed/comments/{postId}`
+- **Description:** Get paginated comments for a post
+- **Authentication:** Required
+- **Path Parameter:** `postId` - Post ID
+- **Query Parameters:**
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: "createdAt") - Sort field
+  - `sortDirection` (default: "desc") - Sort direction
+- **Request Body:**
+```json
+{
+  "postId": "post123"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Comments retrieved successfully",
+  "result": {
+    "content": [
+      {
+        "commentId": "comment123",
+        "postId": "post123",
+        "userId": "user123",
+        "content": "This is a great post!",
+        "createdAt": "2023-10-27T10:00:00Z",
+        "updatedAt": "2023-10-27T10:00:00Z"
+      }
+    ],
+    "totalElements": 1,
+    "totalPages": 1,
+    "first": true,
+    "last": true
+  }
+}
+```
+
+### 3.8 Update Comment
+- **Endpoint:** `PUT /api/v1/feed/comments/{commentId}`
+- **Description:** Update existing comment
+- **Authentication:** Required
+- **Path Parameter:** `commentId` - Comment ID
+- **Request Body:**
+```json
+{
+  "commentId": "comment123",
+  "content": "Updated comment content"
+}
+```
+- **Response:** Same structure as create comment response
+
+### 3.9 Delete Comment
+- **Endpoint:** `DELETE /api/v1/feed/comments/{commentId}`
+- **Description:** Delete a comment
+- **Authentication:** Required
+- **Path Parameter:** `commentId` - Comment ID
+- **Request Body:**
+```json
+{
+  "commentId": "comment123"
+}
+```
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Comment deleted successfully"
+}
+```
+
+### 3.10 Health Check
+- **Endpoint:** `GET /health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP",
+  "service": "post-service"
+}
+```
+
+---
+
+## 4. Chat Service (Port: 8084) - Go Implementation
+
+**Base Path:** `/api/v1/chat` (via Gateway) or direct `/api/chat`
+
+### 4.1 WebSocket Connection
+- **Endpoint:** `GET /api/v1/chat/ws?token={jwt_token}`
+- **Description:** Establish WebSocket connection for real-time messaging
+- **Authentication:** Required (via query parameter)
+- **Protocol:** WebSocket
+- **Connection URL:** `ws://localhost:8084/api/chat/ws?token=your_jwt_token`
+- **Message Format:**
+```json
+{
+  "type": "message",
+  "content": {
+    "receiverId": "user456",
+    "content": "Hello there!",
+    "createdAt": "2023-10-27T10:00:00Z"
+  }
+}
+```
+
+### 4.2 Get Conversation History
+- **Endpoint:** `GET /api/v1/chat/conversations/{otherUserId}`
+- **Description:** Get chat history between current user and another user
+- **Authentication:** Required
+- **Path Parameter:** `otherUserId` - Other user's ID
+- **Query Parameters:**
+  - `limit` (default: 50) - Number of messages to retrieve
+- **Example:** `GET /api/v1/chat/conversations/user456?limit=20`
+- **Response:**
+```json
+[
+  {
+    "id": "msg123",
+    "fromId": "user123",
+    "toId": "user456",
+    "content": "Hello there!",
+    "createdAt": "2023-10-27T10:00:00Z",
+    "read": true
+  },
+  {
+    "id": "msg124",
+    "fromId": "user456",
+    "toId": "user123",
+    "content": "Hi! How are you?",
+    "createdAt": "2023-10-27T10:01:00Z",
+    "read": false
+  }
+]
+```
+
+### 4.3 Mark Messages as Read
+- **Endpoint:** `POST /api/v1/chat/conversations/{fromUserId}/read`
+- **Description:** Mark all messages from a specific user as read
+- **Authentication:** Required
+- **Path Parameter:** `fromUserId` - Sender's user ID
+- **Response:**
+```json
+{
+  "status": "success"
+}
+```
+
+### 4.4 Get Unread Message Count
+- **Endpoint:** `GET /api/v1/chat/unread`
+- **Description:** Get count of unread messages for current user
+- **Authentication:** Required
+- **Response:**
+```json
+{
+  "count": 5
+}
+```
+
+### 4.5 Health Check
+- **Endpoint:** `GET /chat/health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP"
+}
+```
+
+### 4.6 Health Info
+- **Endpoint:** `GET /chat/health/info`
+- **Description:** Detailed health information
+- **Authentication:** Not required
+
+### 4.7 Liveness Probe
+- **Endpoint:** `GET /chat/health/live`
+- **Description:** Kubernetes liveness probe
+- **Authentication:** Not required
+
+### 4.8 Readiness Probe
+- **Endpoint:** `GET /chat/health/ready`
+- **Description:** Kubernetes readiness probe
+- **Authentication:** Not required
+
+---
+
+## 5. Search Service (Port: 8085)
+
+**Base Path:** `/api/v1/search` (via Gateway) or direct `/search`
+
+### 5.1 Search Content
+- **Endpoint:** `GET /api/v1/search`
+- **Description:** Search posts and users
+- **Authentication:** Required
+- **Query Parameters:**
+  - `query` (required) - Search query string
+  - `type` (default: "all") - Search type: "all", "posts", "users"
+  - `page` (default: 0) - Page number
+  - `size` (default: 10) - Page size
+  - `sortBy` (default: "createdAt") - Sort field
+  - `sortOrder` (default: "desc") - Sort direction
+- **Example:** `GET /api/v1/search?query=javascript&type=posts&page=0&size=5`
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Search completed successfully",
+  "result": {
+    "posts": [
+      {
+        "postId": "post123",
+        "userId": "user123",
+        "caption": "Learning JavaScript fundamentals",
+        "contentTypes": ["text"],
+        "privacy": "PUBLIC",
+        "listCommentId": ["comment1"]
+      }
+    ],
+    "users": [
+      {
+        "id": "user456",
+        "userId": "user456",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "userName": "janesmith",
+        "email": "jane@example.com",
+        "location": "San Francisco",
+        "avatar": "avatar_url"
+      }
+    ],
+    "totalHits": 15
+  }
+}
+```
+
+### 5.2 Reindex Data
+- **Endpoint:** `POST /api/v1/search/reindex`
+- **Description:** Reindex all data for search
+- **Authentication:** Required (Admin role)
+- **Response:**
+```json
+{
+  "code": 200,
+  "message": "Reindexing completed successfully"
+}
+```
+
+### 5.3 Health Check
+- **Endpoint:** `GET /search/health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP",
+  "service": "search-service"
+}
+```
+
+---
+
+## 6. Notification Service (Port: 8086)
+
+**Base Path:** `/api/v1/notifications` (via Gateway) or direct `/health`
+
+### 6.1 Health Check
+- **Endpoint:** `GET /api/v1/notifications/health`
+- **Description:** Service health check
+- **Authentication:** Not required
+- **Response:**
+```json
+{
+  "status": "UP",
+  "service": "notification-service"
+}
+```
+
+**Note:** Currently only health endpoint is implemented. Notification endpoints are planned for future implementation.
+
+---
+
+## 7. Eureka Server (Port: 8761)
+
+### 7.1 Service Registry Dashboard
+- **Endpoint:** `GET http://localhost:8761`
+- **Description:** Eureka service registry web dashboard
+- **Authentication:** Not required
+
+---
+
+## Testing Instructions
+
+### 1. Using cURL Examples
+
+#### Authentication:
+```bash
+# Register
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"johndoe","email":"john@example.com","password":"password123","confirmPassword":"password123","firstName":"John","lastName":"Doe","dob":"1990-01-01","phoneNumber":"+1234567890"}'
+
+# Login
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"johndoe","password":"password123"}'
+```
+
+#### User Management:
+```bash
+# Create profile (replace TOKEN with actual JWT)
+curl -X POST http://localhost:8080/api/v1/users/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"userId":"user123","firstName":"John","lastName":"Doe","userName":"johndoe","email":"john@example.com","location":"New York"}'
+
+# Get user profile
+curl -X GET http://localhost:8080/api/v1/users/user123 \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### Post Management:
+```bash
+# Create post
+curl -X POST http://localhost:8080/api/v1/feed/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"userId":"user123","caption":"My first post!","privacy":"PUBLIC"}'
+
+# Get posts
+curl -X GET http://localhost:8080/api/v1/feed/posts?page=0&size=10 \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### 2. Using Postman
+
+1. Import the endpoints from this documentation
+2. Set up environment variables:
+   - `baseUrl`: `http://localhost:8080`
+   - `authToken`: Your JWT token
+3. Use `{{baseUrl}}/api/v1/auth/login` to get token
+4. Set Authorization header: `Bearer {{authToken}}`
+
+### 3. Direct Service Access
+
+You can also access services directly (bypassing API Gateway):
+- Auth Service: `http://localhost:8081`
+- User Service: `http://localhost:8082`
+- Post Service: `http://localhost:8083`
+- Chat Service: `http://localhost:8084`
+- Search Service: `http://localhost:8085`
+- Notification Service: `http://localhost:8086`
+
+### 4. WebSocket Testing
+
+For Chat Service WebSocket testing, use tools like:
+- Browser WebSocket client
+- Postman WebSocket feature
+- wscat: `wscat -c "ws://localhost:8084/api/chat/ws?token=YOUR_JWT_TOKEN"`
+
+## Error Responses
+
+All services follow a consistent error response format:
+
+```json
+{
+  "code": 400,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "username",
+      "message": "Username is required"
+    }
+  ]
+}
+```
+
+Common HTTP status codes:
+- `200`: Success
+- `400`: Bad Request
+- `401`: Unauthorized
+- `403`: Forbidden
+- `404`: Not Found
+- `500`: Internal Server Error
+
+3.  **Create User Profile**
+    *   **Endpoint:** `POST /users/create`
+    *   **Description:** Creates a new user profile.
+    *   **Request Sample (`UserProfileCreationRequest`): 
