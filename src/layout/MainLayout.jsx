@@ -13,7 +13,7 @@ const MainLayout = () => {
   }
   
   // Redirect to login if not authenticated
-  if (!user) {
+  if (user) {
     return <Navigate to="/auth/login" replace />;
   }
 
