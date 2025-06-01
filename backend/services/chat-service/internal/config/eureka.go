@@ -64,6 +64,21 @@ func NewEurekaClient() *EurekaClient {
 	}
 }
 
+func NewEurekaClientWithConfig(
+	eurekaServer, appName, instanceID, ipAddress string,
+	port int, healthCheckURL, statusPageURL, homePageURL string,
+) *EurekaClient {
+	return &EurekaClient{
+		serviceURL:      eurekaServer + "/apps/" + appName,
+		applicationName: appName,
+		port:            fmt.Sprintf("%d", port),
+		hostName:        ipAddress,
+		healthCheckURL:  healthCheckURL,
+		statusURL:       statusPageURL,
+		homePageURL:     homePageURL,
+	}
+}
+
 func (ec *EurekaClient) Register() error {
 	hostIP := "chat-service" // Use container name in Docker
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -24,19 +24,43 @@ import (
 )
 
 func main() {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found")
+	// Try to load YAML config first, fallback to .env
+	var mongoURI, port, jwtSecret string
+	var allowOrigins []string
+	
+	if config.AppConfig != nil {
+		log.Println("Using YAML configuration")
+		mongoURI = config.AppConfig.Database.MongoDB.URI
+		port = config.AppConfig.Server.Port
+		jwtSecret = config.AppConfig.Security.JWT.Secret
+		allowOrigins = config.AppConfig.CORS.AllowedOrigins
+	} else {
+		log.Println("Using .env configuration")
+		// Load .env file as fallback
+		if err := godotenv.Load(); err != nil {
+			log.Printf("Warning: .env file not found")
+		}
+		
+		mongoURI = os.Getenv("MONGODB_URI")
+		if mongoURI == "" {
+			mongoURI = "mongodb://localhost:27017/chatDB"
+		}
+		
+		port = os.Getenv("PORT")
+		if port == "" {
+			port = "8084"
+		}
+		
+		jwtSecret = os.Getenv("JWT_SECRET")
+		allowOrigins = []string{os.Getenv("ALLOW_ORIGINS")}
+		if allowOrigins[0] == "" {
+			allowOrigins = []string{"http://localhost:3000"}
+		}
 	}
 
 	// MongoDB connection
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	mongoURI := os.Getenv("MONGODB_URI")
-	if mongoURI == "" {
-		mongoURI = "mongodb://admin:password@mongodb:27017/chatDB?authSource=chatDB"
-	}
 
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
@@ -58,7 +82,24 @@ func main() {
 	healthHandler := handlers.NewHealthHandler(mongoClient)
 
 	// Initialize Eureka client
-	eurekaClient := config.NewEurekaClient()
+	var eurekaClient *config.EurekaClient
+	if config.AppConfig != nil {
+		// Use YAML config for Eureka
+		eurekaClient = config.NewEurekaClientWithConfig(
+			config.AppConfig.Eureka.Server,
+			config.AppConfig.Eureka.Instance.AppName,
+			config.AppConfig.Eureka.Instance.InstanceID,
+			config.AppConfig.Eureka.Instance.IPAddress,
+			config.AppConfig.Eureka.Instance.Port,
+			config.AppConfig.Eureka.Instance.HealthCheckURL,
+			config.AppConfig.Eureka.Instance.StatusPageURL,
+			config.AppConfig.Eureka.Instance.HomePageURL,
+		)
+	} else {
+		// Use default Eureka config
+		eurekaClient = config.NewEurekaClient()
+	}
+	
 	if err := eurekaClient.Register(); err != nil {
 		log.Printf("Warning: Failed to register with Eureka: %v", err)
 	}
@@ -84,7 +125,6 @@ func main() {
 	router.GET("/chat/health/ready", healthHandler.ReadinessProbe)
 
 	// CORS middleware
-	allowOrigins := strings.Split(os.Getenv("ALLOW_ORIGINS"), ",")
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     allowOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -103,11 +143,6 @@ func main() {
 	}
 
 	// Start server
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8084"
-	}
-
 	log.Printf("Starting chat service on port %s", port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal(err)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/socialmedia/chat-service/internal/config"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -19,9 +20,14 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			secret := os.Getenv("JWT_SECRET")
-			if secret == "" {
-				secret = "your-secret-key" // Fallback for development
+			var secret string
+			if config.AppConfig != nil {
+				secret = config.AppConfig.Security.JWT.Secret
+			} else {
+				secret = os.Getenv("JWT_SECRET")
+				if secret == "" {
+					secret = "your-secret-key" // Fallback for development
+				}
 			}
 			return []byte(secret), nil
 		})

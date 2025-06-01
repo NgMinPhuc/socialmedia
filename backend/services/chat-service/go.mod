@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver v1.13.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

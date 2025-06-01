@@ -1,0 +1,39 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/notification_service_db
+      auto-index-creation: true
+
+# MongoDB initialization script path
+mongodb:
+  init-script: classpath:schema.js
+  
+# Custom application script execution
+app:
+  mongo:
+    init-enabled: true
+    init-script: classpath:schema.js
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8081
+        jwk-set-uri: http://localhost:8081/.well-known/jwks.json
+
+logging:
+  level:
+    org.springframework.data.mongodb: INFO
+    com.socialmedia.notificationservice: DEBUG

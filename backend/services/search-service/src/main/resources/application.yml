@@ -1,0 +1,55 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: search-service
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 10s
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+  cache:
+    type: redis
+  redis:
+    host: localhost
+    port: 6379
+    
+# Elasticsearch index configuration
+elasticsearch:
+  index:
+    config-path: classpath:elasticsearch-mappings.json
+    auto-init: true
+    
+# Custom application script execution
+app:
+  elasticsearch:
+    init-enabled: true
+    mappings-file: classpath:elasticsearch-mappings.json
+    indices:
+      - users
+      - posts
+      - hashtags
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8081
+        jwk-set-uri: http://localhost:8081/.well-known/jwks.json
+
+logging:
+  level:
+    org.springframework.data.elasticsearch: INFO
+    co.elastic.clients: INFO
+    com.socialmedia.searchservice: DEBUG

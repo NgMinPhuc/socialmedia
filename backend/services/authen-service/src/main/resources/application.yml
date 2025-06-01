@@ -1,0 +1,51 @@
+server:
+  port: 8081
+  
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authdb
+    username: admin
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+  sql:
+    init:
+      mode: always # Use 'always' to execute schema.sql and data.sql on startup
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      
+jwt:
+  signerKey: 6v9y$B&E)H@McQfThWmZq4t7w!z%C*F-JaNdRgUjXn2r5u8x/A?D(G+KbPeShVkY
+  private-key: classpath:app.key
+  public-key: classpath:app.pub
+  expiration: 3600 # 1 hour in seconds
+  valid-duration: 3600 # 1 hour in seconds  
+  refresh-duration: 604800 # 1 week in seconds
+  refresh-token: 
+    expiration: 604800 # 1 week in seconds
+    
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+    
+app:
+  service:
+    profile: http://localhost:8082
+
+logging:
+  level:
+    com.socialmedia.authservice: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG

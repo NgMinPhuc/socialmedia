@@ -1,0 +1,122 @@
+{
+  "users": {
+    "settings": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "analysis": {
+        "analyzer": {
+          "autocomplete": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase", "autocomplete_filter"]
+          }
+        },
+        "filter": {
+          "autocomplete_filter": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 10
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "userId": { "type": "keyword" },
+        "username": { 
+          "type": "text", 
+          "analyzer": "standard",
+          "fields": {
+            "autocomplete": { 
+              "type": "text",
+              "analyzer": "autocomplete"
+            }
+          }
+        },
+        "fullName": { 
+          "type": "text", 
+          "analyzer": "standard",
+          "fields": {
+            "autocomplete": { 
+              "type": "text",
+              "analyzer": "autocomplete"
+            }
+          }
+        },
+        "bio": { "type": "text", "analyzer": "standard" },
+        "location": { "type": "text", "analyzer": "standard" },
+        "tags": { "type": "keyword" },
+        "createdAt": { "type": "date" },
+        "followerCount": { "type": "integer" },
+        "followingCount": { "type": "integer" }
+      }
+    }
+  },
+  "posts": {
+    "settings": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "analysis": {
+        "analyzer": {
+          "hashtag_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "postId": { "type": "keyword" },
+        "userId": { "type": "keyword" },
+        "content": { "type": "text", "analyzer": "standard" },
+        "hashtags": { "type": "keyword" },
+        "location": { "type": "geo_point" },
+        "createdAt": { "type": "date" },
+        "likeCount": { "type": "integer" },
+        "commentCount": { "type": "integer" },
+        "shareCount": { "type": "integer" }
+      }
+    }
+  },
+  "hashtags": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1,
+      "analysis": {
+        "analyzer": {
+          "autocomplete": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase", "autocomplete_filter"]
+          }
+        },
+        "filter": {
+          "autocomplete_filter": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 15
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "tag": { 
+          "type": "text",
+          "fields": {
+            "keyword": { "type": "keyword" },
+            "autocomplete": {
+              "type": "text",
+              "analyzer": "autocomplete"
+            }
+          }
+        },
+        "count": { "type": "integer" },
+        "lastUsed": { "type": "date" },
+        "trending": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -98,7 +98,7 @@ public class AuthService {
 
     // Refresh Token API
     public LoginResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        var signedJWT = jwt.verifyToken(request.getToken(), true);
+        var signedJWT = jwt.verifyToken(request.getRefreshToken(), true);
 
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
