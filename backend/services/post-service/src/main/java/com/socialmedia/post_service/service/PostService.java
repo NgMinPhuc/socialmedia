@@ -8,7 +8,10 @@ import com.socialmedia.post_service.dto.response.post.PostResponse;
 import com.socialmedia.post_service.dto.response.ApiResponse;
 import com.socialmedia.post_service.dto.response.UserDTO;
 import com.socialmedia.post_service.entity.Post;
+import com.socialmedia.post_service.exception.AppException;
+import com.socialmedia.post_service.exception.ErrorCode;
 import com.socialmedia.post_service.exception.ResourceNotFoundException;
+import com.socialmedia.post_service.mapper.UserMapper;
 import com.socialmedia.post_service.repository.PostRepository;
 import com.socialmedia.post_service.client.UserClient;
 import lombok.AccessLevel;
@@ -35,16 +38,11 @@ import java.util.List;
 public class PostService {
     PostRepository postRepository;
     UserClient userClient;
+    FileService fileService;
 
     public PostResponse createPost(CreatePostRequest request) {
-        // Process file uploads - for now, store as placeholder URLs
-        List<String> fileUrls = new ArrayList<>();
-        if (request.getFiles() != null && !request.getFiles().isEmpty()) {
-            for (int i = 0; i < request.getFiles().size(); i++) {
-                // TODO: Implement actual file upload to cloud storage
-                fileUrls.add("https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop");
-            }
-        }
+        // Process file uploads using FileService
+        List<String> fileUrls = fileService.storeFiles(request.getFiles());
 
         Post post = Post.builder()
                 .userId(request.getUserId())
@@ -80,7 +78,7 @@ public class PostService {
 
     public PostResponse getPost(String postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND, "Post not found with id: " + postId));
 
         // Fetch user information
         UserDTO author = fetchUserInfo(post.getUserId());
@@ -131,16 +129,15 @@ public class PostService {
 
     public PostResponse updatePost(UpdatePostRequest request) {
         Post existingPost = postRepository.findById(request.getPostId())
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + request.getPostId()));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND, "Post not found with id: " + request.getPostId()));
 
-        // Process files to URLs (simplified - in real app would upload to cloud storage)
-        List<String> fileUrls = new ArrayList<>();
-        if (request.getFiles() != null) {
-            for (MultipartFile file : request.getFiles()) {
-                // In a real application, you would upload to cloud storage and get URLs
-                // For now, just use placeholder URLs
-                fileUrls.add("https://example.com/files/" + file.getOriginalFilename());
-            }
+        // Process files using FileService
+        List<String> fileUrls;
+        if (request.getFiles() != null && !request.getFiles().isEmpty()) {
+            // Delete existing files
+            fileService.deleteFiles(existingPost.getFiles());
+            // Store new files
+            fileUrls = fileService.storeFiles(request.getFiles());
         } else {
             // Keep existing files if no new files provided
             fileUrls = existingPost.getFiles();
@@ -184,7 +181,10 @@ public class PostService {
      */
     public void deletePost(String postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND, "Post not found with id: " + postId));
+        
+        // Delete associated files
+        fileService.deleteFiles(post.getFiles());
 
         postRepository.delete(post);
     }
@@ -193,31 +193,26 @@ public class PostService {
      * Fetch user information from user service
      */
     private UserDTO fetchUserInfo(String userId) {
+        return fetchUserInfoExternal(userId);
+    }
+    
+    /**
+     * Fetch user information from user service - accessible to other services
+     */
+    public UserDTO fetchUserInfoExternal(String userId) {
         try {
-            ApiResponse<UserDTO> response = userClient.getUserById(userId);
+            ApiResponse<com.socialmedia.post_service.client.UserDTO> response = userClient.getUserById(userId);
             if (response != null && response.getResult() != null) {
-                return response.getResult();
+                return com.socialmedia.post_service.mapper.UserMapper.toResponseDTO(response.getResult());
             } else {
                 log.warn("User not found with id: {}", userId);
                 // Return a default user DTO if user not found
-                return UserDTO.builder()
-                        .username("Unknown User")
-                        .name("Unknown User")
-                        .email("unknown@example.com")
-                        .avatar("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face")
-                        .bio("User information unavailable")
-                        .build();
+                return com.socialmedia.post_service.mapper.UserMapper.createDefaultUserDTO();
             }
         } catch (Exception e) {
             log.error("Error fetching user info for userId: {}", userId, e);
             // Return a default user DTO if there's an error
-            return UserDTO.builder()
-                    .username("Unknown User")
-                    .name("Unknown User")
-                    .email("unknown@example.com")
-                    .avatar("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face")
-                    .bio("Error loading user information")
-                    .build();
+            return com.socialmedia.post_service.mapper.UserMapper.createDefaultUserDTO();
         }
     }
 }

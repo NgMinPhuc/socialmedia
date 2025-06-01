@@ -1,58 +1,99 @@
 package middleware
 
 import (
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/socialmedia/chat-service/internal/config"
+	"github.com/socialmedia/chat-service/internal/errors"
+	"github.com/socialmedia/chat-service/internal/response"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(401, gin.H{"error": "No authorization header"})
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"No authorization header provided",
+			))
+			c.Abort()
+			return
+		}
+
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Invalid authorization header format",
+			))
 			c.Abort()
 			return
 		}
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+		if tokenString == "" {
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Empty token in authorization header",
+			))
+			c.Abort()
+			return
+		}
+
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			var secret string
-			if config.AppConfig != nil {
-				secret = config.AppConfig.Security.JWT.Secret
-			} else {
-				secret = os.Getenv("JWT_SECRET")
-				if secret == "" {
-					secret = "your-secret-key" // Fallback for development
-				}
+			// Validate signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.NewAppError(errors.Unauthorized, "Invalid signing method")
 			}
-			return []byte(secret), nil
+			return []byte(jwtSecret), nil
 		})
 
-		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"error": "Invalid token"})
+		if err != nil {
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Invalid token",
+			))
+			c.Abort()
+			return
+		}
+
+		if !token.Valid {
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Token is not valid",
+			))
 			c.Abort()
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.JSON(401, gin.H{"error": "Invalid token claims"})
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Invalid token claims format",
+			))
 			c.Abort()
 			return
 		}
 
 		userID, ok := claims["sub"].(string)
-		if !ok {
-			c.JSON(401, gin.H{"error": "Invalid user ID in token"})
+		if !ok || userID == "" {
+			response.ErrorResponse(c, errors.NewAppError(
+				errors.Unauthorized,
+				"Invalid user ID in token claims",
+			))
 			c.Abort()
 			return
 		}
 
+		// Set user ID in context for use in handlers
 		c.Set("user_id", userID)
+		
+		// Optional: Set additional claims if needed
+		if username, exists := claims["username"]; exists {
+			c.Set("username", username)
+		}
+		
 		c.Next()
 	}
 }

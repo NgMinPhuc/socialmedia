@@ -6,6 +6,7 @@ import com.socialmedia.user_service.dto.request.UserProfileUpdationRequest;
 import com.socialmedia.user_service.dto.response.ApiResponse;
 import com.socialmedia.user_service.dto.response.UserProfileResponse;
 import com.socialmedia.user_service.service.UserProfileService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +25,7 @@ public class UserProfileController {
     
     @PostMapping("/avatar")
     public ApiResponse<UserProfileResponse> uploadAvatar(
-            @ModelAttribute AvatarUploadRequest request) {
+            @ModelAttribute @Valid AvatarUploadRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .code(200)
                 .message("Avatar uploaded successfully")
@@ -41,7 +42,7 @@ public class UserProfileController {
     }
 
     @PostMapping("/create")
-    public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody UserProfileCreationRequest request) {
+    public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody @Valid UserProfileCreationRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .code(200)
                 .message("User profile created successfully")
@@ -50,7 +51,7 @@ public class UserProfileController {
     }
 
     @PutMapping("/update")
-    public ApiResponse<UserProfileResponse> updateUserProfile(@RequestBody UserProfileUpdationRequest request) {
+    public ApiResponse<UserProfileResponse> updateUserProfile(@RequestBody @Valid UserProfileUpdationRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .code(200)
                 .message("User profile updated successfully")
@@ -82,21 +83,21 @@ public class UserProfileController {
                 .build();
     }
 
-//    @PostMapping("/unfollow/{id}")
-//    public ApiResponse<Void> unfollowUser(@PathVariable String id) {
-//        return ApiResponse.<Void>builder()
-//                .code(200)
-//                .message("Unfollowed user successfully")
-//                .result()
-//                .build();
-//    }
-//
-//    @PostMapping("/follow/{id}")
-//    public ApiResponse<Void> followUser(@PathVariable String id) {
-//        return ApiResponse.<Void>builder()
-//                .code(200)
-//                .message("Followed user successfully")
-//                .result("Followed user successfully")
-//                .build();
-//    }
+    @PostMapping("/unfollow/{id}")
+    public ApiResponse<Void> unfollowUser(@PathVariable String id) {
+        userProfileService.unfollowUser(id);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Unfollowed user successfully")
+                .build();
+    }
+
+    @PostMapping("/follow/{id}")
+    public ApiResponse<Void> followUser(@PathVariable String id) {
+        userProfileService.followUser(id);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Followed user successfully")
+                .build();
+    }
 }

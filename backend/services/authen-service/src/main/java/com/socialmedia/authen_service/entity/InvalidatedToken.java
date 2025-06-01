@@ -17,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "Blacklist")
+@Table(name = "blacklist")
 public class InvalidatedToken {
     @Id
     @Column(name = "id")

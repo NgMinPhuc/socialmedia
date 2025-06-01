@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -16,10 +15,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/socialmedia/chat-service/internal/config"
-
+	"github.com/socialmedia/chat-service/internal/errors"
 	"github.com/socialmedia/chat-service/internal/handlers"
 	"github.com/socialmedia/chat-service/internal/middleware"
 	"github.com/socialmedia/chat-service/internal/repository"
+	"github.com/socialmedia/chat-service/internal/response"
 	"github.com/socialmedia/chat-service/internal/service"
 )
 
@@ -64,18 +64,23 @@ func main() {
 
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer mongoClient.Disconnect(ctx)
+	defer func() {
+		if err := mongoClient.Disconnect(ctx); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}()
 
 	// Ping MongoDB
 	if err := mongoClient.Ping(ctx, nil); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
+	log.Println("Successfully connected to MongoDB")
 
 	db := mongoClient.Database("chatDB")
 
-	// Initialize components
+	// Initialize components with improved error handling
 	chatRepo := repository.NewChatRepository(db)
 	chatService := service.NewChatService(chatRepo)
 	chatHandler := handlers.NewChatHandler(chatService)
@@ -102,6 +107,8 @@ func main() {
 	
 	if err := eurekaClient.Register(); err != nil {
 		log.Printf("Warning: Failed to register with Eureka: %v", err)
+	} else {
+		log.Println("Successfully registered with Eureka service registry")
 	}
 
 	// Graceful shutdown handler
@@ -109,14 +116,31 @@ func main() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 		<-sigChan
+		log.Println("Shutting down chat service...")
 		if err := eurekaClient.Deregister(); err != nil {
 			log.Printf("Error deregistering from Eureka: %v", err)
+		} else {
+			log.Println("Successfully deregistered from Eureka")
 		}
 		os.Exit(0)
 	}()
 
-	// Setup Gin router
+	// Setup Gin router with error handling middleware
 	router := gin.Default()
+	
+	// Global error handling middleware
+	router.Use(func(c *gin.Context) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Panic recovered: %v", r)
+				response.ErrorResponse(c, errors.NewAppError(
+					errors.InternalServerError,
+					"Internal server error occurred",
+				))
+			}
+		}()
+		c.Next()
+	})
 
 	// Health check endpoints (no auth required)
 	router.GET("/chat/health", healthHandler.Health)
@@ -133,7 +157,7 @@ func main() {
 	}))
 
 	// Middleware
-	router.Use(middleware.AuthMiddleware())
+	router.Use(middleware.AuthMiddleware(jwtSecret))
 	api := router.Group("/api/chat")
 	{
 		api.GET("/ws", chatHandler.WebSocket)
@@ -143,8 +167,12 @@ func main() {
 	}
 
 	// Start server
-	log.Printf("Starting chat service on port %s", port)
+	log.Printf("Starting chat service on port %s with enhanced error handling", port)
+	log.Printf("MongoDB URI: %s", mongoURI)
+	log.Printf("JWT Secret configured: %t", jwtSecret != "")
+	log.Printf("CORS allowed origins: %v", allowOrigins)
+	
 	if err := router.Run(":" + port); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

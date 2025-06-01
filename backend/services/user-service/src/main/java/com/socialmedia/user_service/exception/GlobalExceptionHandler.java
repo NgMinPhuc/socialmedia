@@ -40,6 +40,17 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
+    
+    @ExceptionHandler(value = ValidationException.class)
+    ResponseEntity<ApiResponse> handlingValidationException(ValidationException exception) {
+        ApiResponse apiResponse = new ApiResponse();
+
+        apiResponse.setCode(400);
+        apiResponse.setMessage("Validation failed");
+        apiResponse.setErrors(exception.getErrors());
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
 
     @ExceptionHandler(value = AccessDeniedException.class)
     ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {

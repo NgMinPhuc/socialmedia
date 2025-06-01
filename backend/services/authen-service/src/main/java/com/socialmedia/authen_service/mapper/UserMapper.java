@@ -10,10 +10,13 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+    @Mapping(target = "userId", ignore = true) // UUID will be generated automatically
     User registerRequestMapToUse(RegisterRequest registerRequest);
 
+    @Mapping(target = "message", constant = "User registered successfully")
     MessageResponse userToRegisterResponse(User user);
 
     @Mapping(source = "user.username", target = "username")
+    @Mapping(source = "accessToken", target = "accessToken")
     LoginResponse userEntityToLoginResponse(User user, String accessToken);
 }

@@ -2,6 +2,7 @@
 -- Simplified without complex authorization roles
 
 -- Drop tables if they exist (in reverse order of dependencies)
+DROP TABLE IF EXISTS blacklist CASCADE;
 DROP TABLE IF EXISTS refresh_tokens CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
@@ -18,6 +19,12 @@ CREATE TABLE users (
     failed_attempts INTEGER DEFAULT 0
 );
 
+-- Blacklist table for invalidated tokens (used by InvalidatedToken entity)
+CREATE TABLE blacklist (
+    id VARCHAR(255) PRIMARY KEY,
+    expired_at TIMESTAMP NOT NULL
+);
+
 -- Refresh token table for JWT authentication
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY,
@@ -32,3 +39,4 @@ CREATE TABLE refresh_tokens (
 -- Create indexes for better performance
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX idx_blacklist_expired_at ON blacklist(expired_at);

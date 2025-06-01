@@ -17,6 +17,8 @@ public enum ErrorCode {
     EMAIL_REQUIRED(400, "Email is required", HttpStatus.BAD_REQUEST),
     PASSWORD_REQUIRED(400, "Password is required", HttpStatus.BAD_REQUEST),
     PASSWORDS_DO_NOT_MATCH(400, "Passwords do not match", HttpStatus.BAD_REQUEST),
+    EXPIRED_TOKEN(401, "The token has expired", HttpStatus.UNAUTHORIZED),
+    INVALID_TOKEN(401, "The token is invalid", HttpStatus.UNAUTHORIZED),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

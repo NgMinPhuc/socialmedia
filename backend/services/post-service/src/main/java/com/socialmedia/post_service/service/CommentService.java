@@ -1,6 +1,7 @@
 package com.socialmedia.post_service.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import com.socialmedia.post_service.dto.request.comment.GetCommentRequest;
 import com.socialmedia.post_service.dto.response.comment.CommentResponse;
@@ -16,7 +17,9 @@ import com.socialmedia.post_service.dto.request.comment.UpdateCommentRequest;
 import com.socialmedia.post_service.dto.request.comment.DeleteCommentRequest;
 import com.socialmedia.post_service.entity.Comment;
 import com.socialmedia.post_service.entity.Post;
+import com.socialmedia.post_service.exception.AppException;
 import com.socialmedia.post_service.exception.CommentNotFoundException;
+import com.socialmedia.post_service.exception.ErrorCode;
 import com.socialmedia.post_service.exception.PostNotFoundException;
 import com.socialmedia.post_service.repository.CommentRepository;
 import com.socialmedia.post_service.repository.PostRepository;
@@ -30,7 +33,7 @@ public class CommentService {
 
     public CommentResponse createComment(CreateCommentRequest request) {
         Post post = postRepository.findById(request.getPostId())
-                .orElseThrow(() -> new PostNotFoundException("Post not found with id: " + request.getPostId()));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND, "Post not found with id: " + request.getPostId()));
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -41,6 +44,14 @@ public class CommentService {
                 .build();
 
         comment = commentRepository.save(comment);
+        
+        // Update comment count on post
+        post.setCommentsCount(post.getCommentsCount() + 1);
+        if (post.getListCommentId() == null) {
+            post.setListCommentId(new ArrayList<>());
+        }
+        post.getListCommentId().add(comment.getCommentId());
+        postRepository.save(post);
 
         return CommentResponse.builder()
                 .commentId(comment.getCommentId())
@@ -54,7 +65,7 @@ public class CommentService {
 
     public Comment getComment(String commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException("Comment not found with id: " + commentId));
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND, "Comment not found with id: " + commentId));
     }
 
     public CommentResponse updateComment(UpdateCommentRequest request) {
@@ -76,12 +87,23 @@ public class CommentService {
 
     public void deleteComment(DeleteCommentRequest request) {
         Comment comment = getComment(request.getCommentId());
+        Post post = comment.getPost();
+        
+        // Update comment count on post
+        if (post.getCommentsCount() > 0) {
+            post.setCommentsCount(post.getCommentsCount() - 1);
+        }
+        if (post.getListCommentId() != null) {
+            post.getListCommentId().remove(comment.getCommentId());
+        }
+        postRepository.save(post);
+        
         commentRepository.delete(comment);
     }
 
     public Page<CommentResponse> getCommentsByPostId(GetCommentRequest request, Pageable pageable) {
         Post post = postRepository.findById(request.getPostId())
-                .orElseThrow(() -> new PostNotFoundException("Post not found with id: " + request.getPostId()));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND, "Post not found with id: " + request.getPostId()));
 
         Page<Comment> comments = commentRepository.findByPostOrderByCreatedAtDesc(post, pageable);
 

@@ -15,6 +15,10 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    AVATAR_SIZE_EXCEEDED(1009, "Avatar file size exceeds maximum allowed", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(1010, "Invalid file type. Only image files are allowed", HttpStatus.BAD_REQUEST),
+    AVATAR_NOT_FOUND(1011, "User avatar not found", HttpStatus.NOT_FOUND),
+    INVALID_REQUEST(1012, "Invalid request data", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
