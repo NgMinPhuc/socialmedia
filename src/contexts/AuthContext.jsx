@@ -1,23 +1,33 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authService from '@/services/authService';
+import { authService } from '@/services';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUser());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Cải thiện tiếp theo: Xem xét tránh useEffect chạy lại vô tận khi user thay đổi, đồng bộ tài khoản giữa nhiều tab. 
+  // Initialize auth state
   useEffect(() => {
-    const token = authService.getToken();
-    if (token && !user) {
-      const userData = authService.getCurrentUser();
-      setUser(userData);
-    }
-  }, [user]);
+    const initializeAuth = async () => {
+      try {
+        const token = authService.getToken();
+        if (token && !user) {
+          const userData = authService.getCurrentUser();
+          setUser(userData);
+        }
+      } catch (err) {
+        console.log('Auth initialization failed');
+        setError(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
@@ -76,12 +86,13 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   const logout = () => {
     authService.logout();
     setUser(null);
     navigate('/auth/login');
-  };  const value = {
+  };
+
+  const value = {
     user,
     setUser,
     loading,

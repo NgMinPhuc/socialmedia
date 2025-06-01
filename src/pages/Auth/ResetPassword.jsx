@@ -10,7 +10,7 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [localError, setLocalError] = useState(''); // For password mismatch validation
+  const [localError, setLocalError] = useState(''); // Dùng để quản lý mật khẩu khớp với không khớp
   const { resetPassword, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

@@ -1,6 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-
 const navigation = [
   {
     name: 'Home',
@@ -65,37 +63,34 @@ const navigation = [
 ];
 
 const Sidebar = () => {
-  const { user } = useAuth();
 
   return (
-    <div className="hidden md:flex flex-col w-64 min-h-screen bg-white border-r">
-      <div className="flex flex-col flex-grow overflow-y-auto">
-        <nav className="flex-1 px-2 py-4 space-y-1">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
+    <div className="hidden md:flex flex-col w-64 min-h-screen bg-white border-r">      <div className="flex flex-col flex-grow overflow-y-auto">
+      <nav className="flex-1 px-2 py-4 space-y-1">
+        {navigation.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${isActive
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <svg
+              className="w-6 h-6 mr-3 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-6 h-6 mr-3 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {item.icon}
-              </svg>
-              {item.name}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
+              {item.icon}
+            </svg>
+            {item.name}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
     </div>
   );
 };
