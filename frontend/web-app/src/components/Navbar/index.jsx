@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
-import Avatar from '@/ui/Avatar';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -85,10 +84,10 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <Avatar 
-                    src={user?.avatar}
-                    alt={user?.name || user?.username || 'User avatar'}
-                    size="sm"
+                  <img
+                    className="h-8 w-8 rounded-full"
+                    src={user?.avatar || 'https://via.placeholder.com/32'}
+                    alt={user?.name || 'User avatar'}
                   />
                 </button>
               </div>
@@ -96,7 +95,7 @@ const Navbar = () => {
               {isMenuOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5">
                   <Link
-                    to={`/profile/${user?.username}`}
+                    to="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Your Profile

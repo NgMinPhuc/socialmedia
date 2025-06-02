@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
 import Button from '@/ui/Button';
-import { DEFAULT_AVATAR } from '@/utils/constants';
 
 const FollowingPage = () => {
   const { username } = useParams();
@@ -31,7 +30,7 @@ const FollowingPage = () => {
           id: 1,
           fullName: 'Alice Johnson',
           username: 'alicej',
-          avatar: DEFAULT_AVATAR,
+          avatar: 'https://via.placeholder.com/40',
           bio: 'Product Designer',
           isFollowing: true
         },
@@ -39,7 +38,7 @@ const FollowingPage = () => {
           id: 2,
           fullName: 'Bob Wilson',
           username: 'bobw',
-          avatar: DEFAULT_AVATAR,
+          avatar: 'https://via.placeholder.com/40',
           bio: 'Full Stack Developer',
           isFollowing: true
         },
@@ -47,7 +46,7 @@ const FollowingPage = () => {
           id: 3,
           fullName: 'Sarah Davis',
           username: 'sarahd',
-          avatar: DEFAULT_AVATAR,
+          avatar: 'https://via.placeholder.com/40',
           bio: 'Marketing Specialist',
           isFollowing: true
         }

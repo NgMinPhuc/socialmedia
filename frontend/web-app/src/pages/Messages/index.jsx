@@ -31,8 +31,8 @@ const MessagesPage = () => {
   }, [messages]);
 
   const initializeWebSocket = () => {
-    if (user) {
-      chatService.connect(user); // user is now just the username string
+    if (user?.id) {
+      chatService.connect(user.id);
       
       chatService.onMessage((message) => {
         if (selectedConversation && 

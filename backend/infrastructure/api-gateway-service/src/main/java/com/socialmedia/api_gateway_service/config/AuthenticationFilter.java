@@ -20,6 +20,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -32,7 +33,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     ValidationService validationService;
-    ObjectMapper objectMapper;    @NonFinal
+    ObjectMapper objectMapper;
+    
+    @NonFinal
     private String[] publicEndpoints = {
             "/auth/login",
             "/auth/register", 
@@ -41,10 +44,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/health",
             "/auth/health",
             "/users/health",
-            "/posts/health",
-            "/search/health",
-            "/notifications/health", 
-            "/chat/health",
+            "/notifications/health",
             "/actuator/.*"
     };
 
@@ -61,7 +61,12 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         List<String> authHeader = exchange.getRequest().getHeaders().get("Authorization");
         if (CollectionUtils.isEmpty(authHeader)) return unauthenticated(exchange.getResponse());
 
-        String token = authHeader.getFirst().replace("Bearer ", "");
+        String token = authHeader.getFirst();
+        if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
+            return unauthenticated(exchange.getResponse());
+        }
+
+        token = token.replace("Bearer ", "");
         log.info("Token: {}", token);
 
         return validationService.validateToken(token)
@@ -77,7 +82,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 });
     }
 
-
     @Override
     public int getOrder() {
         return -1;
@@ -87,25 +91,22 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
         log.info("Checking path: {} against patterns with prefix: {}", path, apiPrefix);
         
-        // For API path like "/api/v1/auth/register"
-        // We need to check it against patterns like "/auth/register" with prefix "api/v1" 
-        boolean isPublic = false;
-        
+        String fullPattern;
         for (String endpoint : publicEndpoints) {
-            String fullPattern = "/" + apiPrefix + endpoint;
-            String plainPattern = fullPattern.replace(".*", "");
-            log.info("Testing if path '{}' starts with '{}'", path, plainPattern);
-            if (path.startsWith(plainPattern)) {
-                isPublic = true;
-                break;
+            fullPattern = "/" + apiPrefix + endpoint;
+            
+            if (endpoint.contains(".*")) {
+                String plainPattern = fullPattern.replace(".*", "");
+                if (path.startsWith(plainPattern)) {
+                    return true;
+                }
+            } else if (path.equals(fullPattern)) {
+                return true;
             }
         }
         
-        log.info("Path '{}' is public: {}", path, isPublic);
-        return isPublic;
+        return false;
     }
-
-
 
     Mono<Void> unauthenticated(ServerHttpResponse response){
         ApiResponse<?> apiResponse = ApiResponse.builder()

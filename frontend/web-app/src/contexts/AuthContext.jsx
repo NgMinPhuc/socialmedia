@@ -4,95 +4,114 @@ import authService from '@/services/authService';
 
 const AuthContext = createContext(null);
 
+// Mock user for development
+const mockUser = {
+  id: 1,
+  username: "current_user",
+  fullName: "Current User",
+  avatar: "https://i.pravatar.cc/150?img=1",
+  email: "user@example.com"
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in on app start
-    const initAuth = () => {
-      const token = authService.getAccessToken();
+    const token = authService.getToken();
+    if (token && !user) {
       const userData = authService.getCurrentUser();
-      
-      if (token && userData) {
+      if (userData) {
         setUser(userData);
       }
-      setLoading(false);
-    };
-    
-    initAuth();
-  }, []);
+    }
+  }, [user]);
 
-  const login = async (credentials) => {
+  const login = async (usernameOrEmail, password) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authService.login(credentials);
-      if (response.code === 200) {
-        setUser(response.result.username);
-        navigate('/home');
-        return response;
+      console.log('AuthContext login attempt:', { usernameOrEmail, password });
+      const data = await authService.login(usernameOrEmail, password);
+      console.log('AuthContext login success:', data);
+      
+      // Kiểm tra và lưu token
+      if (data.result?.accessToken) {
+        localStorage.setItem('token', data.result.accessToken);
+        // Lưu thông tin user đầy đủ
+        const userData = {
+          id: data.result.id || 1,
+          username: data.result.username || usernameOrEmail,
+          fullName: data.result.fullName || "Current User",
+          avatar: data.result.avatar || "https://i.pravatar.cc/150?img=1",
+          email: data.result.email || `${usernameOrEmail}@example.com`
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        // Chuyển hướng sau khi đăng nhập thành công
+        navigate('/');
       } else {
-        throw new Error(response.message || 'Login failed');
+        throw new Error('Invalid response format from server');
       }
+      return data;
     } catch (err) {
-      const errorMessage = err.message || 'Failed to login';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      console.error('AuthContext login error:', err);
+      setError(err.message || 'Failed to login');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
-
   const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authService.register(userData);
-      if (response.code === 200) {
-        // After successful registration, user needs to login
-        navigate('/auth/login');
-        return response;
-      } else {
-        throw new Error(response.message || 'Registration failed');
-      }
+      const data = await authService.register(userData);
+      setUser(data.user);
+      navigate('/');
+      return data;
     } catch (err) {
-      const errorMessage = err.message || 'Failed to register';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      setError(err.message || 'Failed to register');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const changePassword = async (passwordData) => {
+  const forgotPassword = async (email) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authService.changePassword(passwordData);
-      return response;
+      const data = await authService.forgotPassword(email);
+      return data;
     } catch (err) {
-      const errorMessage = err.message || 'Failed to change password';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      setError(err.message || 'Failed to send reset email');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = async () => {
+  const resetPassword = async (token, newPassword) => {
     setLoading(true);
+    setError(null);
     try {
-      await authService.logout();
+      const data = await authService.resetPassword(token, newPassword);
+      return data;
     } catch (err) {
-      console.error('Logout error:', err);
+      setError(err.message || 'Failed to reset password');
+      throw err;
     } finally {
-      setUser(null);
       setLoading(false);
-      navigate('/auth/login');
     }
+  };
+
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    navigate('/auth/login');
   };
 
   const value = {
@@ -103,8 +122,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    changePassword,
-    isAuthenticated: authService.isAuthenticated
+    forgotPassword,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -117,3 +136,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;

@@ -1,67 +1,150 @@
 import axiosInstance from './axiosConfig';
 
+const API_PREFIX = '/api/v1';
+
 const userApi = {
-    createUserProfile: async (userData) => {
+    getCurrentUser: async () => {
         try {
-            const response = await axiosInstance.post('/users/create', userData);
+            const response = await axiosInstance.get(`${API_PREFIX}/users/me`);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error;
+            throw error;
         }
     },
 
-    updateUserProfile: async (userData) => {
+    updateProfile: async (userData) => {
         try {
-            const response = await axiosInstance.put('/users/update', userData);
+            const response = await axiosInstance.put(`${API_PREFIX}/users/profile`, userData);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error;
+            throw error;
         }
     },
 
-    getUserProfile: async (userId) => {
-        try {
-            const response = await axiosInstance.get(`/users/${userId}`);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-    getMyProfile: async () => {
-        try {
-            const response = await axiosInstance.get('/users/me');
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-    uploadAvatar: async (userId, avatarFile) => {
+    uploadAvatar: async (file) => {
         try {
             const formData = new FormData();
-            formData.append('userId', userId);
-            formData.append('avatar', avatarFile);
-
-            const response = await axiosInstance.post('/users/avatar', formData, {
+            formData.append('avatar', file);
+            const response = await axiosInstance.post(`${API_PREFIX}/users/avatar`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || error;
+            throw error;
+        }
+    },
+
+    getUser: async (userId) => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    followUser: async (userId) => {
+        try {
+            const response = await axiosInstance.post(`${API_PREFIX}/users/follow/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    unfollowUser: async (userId) => {
+        try {
+            const response = await axiosInstance.post(`${API_PREFIX}/users/unfollow/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getUserByUsername: async (username) => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/username/${username}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getFollowers: async (username) => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/${username}/followers`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getFollowing: async (username) => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/${username}/following`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getUserPosts: async (username) => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/${username}/posts`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateSettings: async (settingsData) => {
+        try {
+            const response = await axiosInstance.put(`${API_PREFIX}/users/settings`, settingsData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    changePassword: async (passwordData) => {
+        try {
+            const response = await axiosInstance.put(`${API_PREFIX}/users/password`, passwordData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    deleteAccount: async () => {
+        try {
+            const response = await axiosInstance.delete(`${API_PREFIX}/users/account`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAllUsers: async () => {
+        try {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/all`);
+            return response.data;
+        } catch (error) {
+            console.error('Get all users error:', error);
+            throw error;
         }
     },
 
     getUserAvatar: async (userId) => {
         try {
-            const response = await axiosInstance.get(`/users/${userId}/avatar`, {
+            const response = await axiosInstance.get(`${API_PREFIX}/users/${userId}/avatar`, {
                 responseType: 'blob'
             });
             return URL.createObjectURL(response.data);
         } catch (error) {
-            throw error.response?.data || error;
+            console.error('Get user avatar error:', error);
+            throw error;
         }
     }
 };

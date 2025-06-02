@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Social Media Application Service Startup Script
-# This script starts all microservices in the correct order with health checks
+# This script starts selected microservices in the correct order with health checks
 
 echo "🚀 Starting Social Media Application Services..."
 
@@ -13,17 +13,16 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Base directory
-BASE_DIR="/Users/blake/Desktop/socialmedia/backend"
+# Base directory - using relative path
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$BASE_DIR/backend"
+FRONTEND_DIR="$BASE_DIR/frontend/web-app"
 
 # Service definitions
 declare -A SERVICES=(
     ["eureka-server"]="8761:Eureka Server:infrastructure/eureka-server"
     ["auth-service"]="8081:Auth Service:services/authen-service"
     ["user-service"]="8082:User Service:services/user-service"
-    ["post-service"]="8083:Post Service:services/post-service"
-    ["chat-service"]="8084:Chat Service:services/chat-service"
-    ["search-service"]="8085:Search Service:services/search-service"
     ["notification-service"]="8086:Notification Service:services/notification-service"
     ["api-gateway"]="8080:API Gateway:infrastructure/api-gateway-service"
 )
@@ -36,7 +35,7 @@ start_spring_service() {
     
     echo -e "${BLUE}🔄 Starting $service_name on port $port...${NC}"
     
-    cd "$BASE_DIR/$service_path"
+    cd "$BACKEND_DIR/$service_path"
     
     # Start service in background
     nohup ./mvnw spring-boot:run > "../../../logs/${service_name}.log" 2>&1 &
@@ -46,26 +45,31 @@ start_spring_service() {
     echo -e "${GREEN}✅ $service_name started (PID: $pid)${NC}"
     
     # Wait a bit before starting next service
-    sleep 10
+    sleep 20
 }
 
-# Function to start Go service (Chat Service)
-start_go_service() {
-    echo -e "${BLUE}🔄 Starting Chat Service on port 8084...${NC}"
+# Function to start Frontend service
+start_frontend() {
+    echo -e "${BLUE}🔄 Starting Frontend service...${NC}"
     
-    cd "$BASE_DIR/services/chat-service"
+    cd "$FRONTEND_DIR"
     
-    # Start service in background
-    nohup go run cmd/main.go > "../../../logs/chat-service.log" 2>&1 &
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        echo -e "${YELLOW}📦 Installing frontend dependencies...${NC}"
+        npm install
+    fi
+    
+    # Start frontend in background
+    nohup npm run dev > "../../logs/frontend.log" 2>&1 &
     local pid=$!
-    echo $pid > "../../../logs/chat-service.pid"
+    echo $pid > "../../logs/frontend.pid"
     
-    echo -e "${GREEN}✅ Chat Service started (PID: $pid)${NC}"
-    sleep 5
+    echo -e "${GREEN}✅ Frontend service started (PID: $pid)${NC}"
 }
 
 # Create logs directory
-mkdir -p /Users/blake/Desktop/socialmedia/logs
+mkdir -p "$BASE_DIR/logs"
 
 echo "📋 Starting services in optimal order..."
 echo ""
@@ -75,7 +79,7 @@ start_spring_service "Eureka Server" "infrastructure/eureka-server" 8761
 
 # Wait for Eureka to be fully ready
 echo "⏳ Waiting for Eureka Server to be ready..."
-sleep 15
+sleep 30
 
 # 2. Start Auth Service (Authentication)
 start_spring_service "Auth Service" "services/authen-service" 8081
@@ -83,36 +87,28 @@ start_spring_service "Auth Service" "services/authen-service" 8081
 # 3. Start User Service (User Management)
 start_spring_service "User Service" "services/user-service" 8082
 
-# 4. Start Post Service (Post Management)
-start_spring_service "Post Service" "services/post-service" 8083
-
-# 5. Start Chat Service (Real-time Messaging)
-start_go_service
-
-# 6. Start Search Service (Search & Discovery)
-start_spring_service "Search Service" "services/search-service" 8085
-
-# 7. Start Notification Service (Notifications)
+# 4. Start Notification Service (Notifications)
 start_spring_service "Notification Service" "services/notification-service" 8086
 
-# 8. Start API Gateway (Last to ensure all services are registered)
+# 5. Start API Gateway (Last to ensure all services are registered)
 echo "⏳ Waiting for all services to register with Eureka..."
-sleep 20
+sleep 30
 start_spring_service "API Gateway" "infrastructure/api-gateway-service" 8080
+
+# 6. Start Frontend service
+start_frontend
 
 echo ""
 echo -e "${GREEN}🎉 All services started successfully!${NC}"
 echo ""
 echo "📋 Service URLs:"
+echo "   🌐 Frontend: http://localhost:3000"
 echo "   🌐 API Gateway: http://localhost:8080"
 echo "   🔐 Auth Service: http://localhost:8081"
 echo "   👤 User Service: http://localhost:8082"
-echo "   📝 Post Service: http://localhost:8083"
-echo "   💬 Chat Service: http://localhost:8084"
-echo "   🔍 Search Service: http://localhost:8085"
 echo "   🔔 Notification Service: http://localhost:8086"
 echo "   🗂️  Eureka Dashboard: http://localhost:8761"
 echo ""
-echo "📁 Logs are available in: /Users/blake/Desktop/socialmedia/logs/"
+echo "📁 Logs are available in: $BASE_DIR/logs/"
 echo ""
-echo "🛑 To stop all services, run: ./stop-services.sh"
+echo "🛑 To stop all services, run: ./force-stop.sh"

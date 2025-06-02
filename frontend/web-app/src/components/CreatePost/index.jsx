@@ -1,14 +1,13 @@
 import { useState, useRef } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
-import { usePosts } from '@/hooks/usePosts';
+import { postApi } from '@/services';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/ui/Button';
 import Avatar from '@/ui/Avatar';
 
 const CreatePost = ({ onPostCreated }) => {
   const { user } = useAuth();
-  const { createPost } = usePosts();
-  const [caption, setCaption] = useState('');
+  const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,20 +35,16 @@ const CreatePost = ({ onPostCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!caption.trim() && !image) return;
+    if (!content.trim() && !image) return;
 
     setLoading(true);
     try {
-      const postData = {
-        userId: user, // user could be just the username or id string
-        caption: caption.trim(),
-        privacy: 'public',
-        files: image ? [image] : [],
-        contentTypes: image ? [image.type] : []
+      const formData = {
+        content: content.trim(),
+        image: image
       };
-      
-      await createPost(postData);
-      setCaption('');
+      await postApi.createPost(formData);
+      setContent('');
       setImage(null);
       setImagePreview('');
       onPostCreated?.();
@@ -66,8 +61,8 @@ const CreatePost = ({ onPostCreated }) => {
         <div className="flex space-x-4">
           <Avatar src={user?.avatar} alt={user?.name} />
           <textarea
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
             className="flex-1 resize-none border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             rows="3"
@@ -105,10 +100,8 @@ const CreatePost = ({ onPostCreated }) => {
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t">
           <label className="cursor-pointer flex items-center space-x-2 text-gray-500 hover:text-blue-500">
-            <div className="flex items-center space-x-2">
-              <PhotoIcon className="h-6 w-6" />
-              <span>Add Photo</span>
-            </div>
+            <PhotoIcon className="h-6 w-6" />
+            <span>Add Photo</span>
             <input
               type="file"
               ref={fileInputRef}
@@ -121,7 +114,7 @@ const CreatePost = ({ onPostCreated }) => {
           <Button
             type="submit"
             loading={loading}
-            disabled={loading || (!caption.trim() && !image)}
+            disabled={loading || (!content.trim() && !image)}
           >
             Post
           </Button>

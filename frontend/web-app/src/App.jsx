@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import MainLayout from '@/layout/MainLayout';
 import AuthLayout from '@/layout/AuthLayout';
-import HomePage from '@/pages/Post/Home';
+import HomePage from '@/pages/Home';
+// import ExplorePage from '@/pages/Post/Explore';
 import MyPostsPage from '@/pages/Post/MyPosts';
 import ProfilePage from '@/pages/User/Profile';
 import EditProfilePage from '@/pages/User/EditProfile';
@@ -22,21 +23,18 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Auth routes */}
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
           </Route>
-          
-          {/* Protected routes */}
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="home" element={<HomePage />} />
+            <Route index element={<HomePage />} />
+            {/* <Route path="explore" element={<ExplorePage />} /> */}
             <Route path="myposts" element={<MyPostsPage />} />
-            <Route path="profile/me" element={<ProfilePage />} />
-            <Route path="profile/:username" element={<ProfilePage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="profile/:userId" element={<ProfilePage />} />
             <Route path="profile/edit" element={<EditProfilePage />} />
             <Route path="profile/:username/followers" element={<FollowersPage />} />
             <Route path="profile/:username/following" element={<FollowingPage />} />
