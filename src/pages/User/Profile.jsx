@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { userApi, postApi } from '@/services';
+import { userApi } from '@/services';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePosts } from '@/hooks/usePosts';
 import Post from '@/components/Post';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
@@ -10,6 +11,7 @@ import Button from '@/ui/Button';
 const ProfilePage = () => {
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
+  const { getUserPosts } = usePosts();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,11 +21,15 @@ const ProfilePage = () => {
 
   const isOwnProfile = !userId || userId === currentUser?.id;
   const profileUserId = userId || currentUser?.id;
-
   useEffect(() => {
     fetchUserProfile();
-    fetchUserPosts();
   }, [profileUserId]);
+
+  useEffect(() => {
+    if (user?.username) {
+      fetchUserPosts();
+    }
+  }, [user]);
 
   const fetchUserProfile = async () => {
     try {
@@ -39,15 +45,14 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }; const fetchUserPosts = async () => {
+    if (!user?.username) return;
 
-  const fetchUserPosts = async () => {
     setPostsLoading(true);
     try {
-      // Assuming we have a getUserPosts endpoint
-      const response = await postApi.getUserPosts?.(profileUserId) || 
-                      await postApi.getFeed(); // Fallback to feed
-      setPosts(response.data || response);
+      const response = await getUserPosts(user.username, 0, 10);
+      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      setPosts(response.posts || []);
     } catch (error) {
       console.error('Error fetching user posts:', error);
     } finally {
@@ -89,19 +94,19 @@ const ProfilePage = () => {
       {/* Profile Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex items-start space-x-6">
-          <Avatar 
-            src={user.avatar} 
+          <Avatar
+            src={user.avatar}
             alt={user.fullName}
             size="xl"
           />
-          
+
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{user.fullName}</h1>
                 <p className="text-gray-600">@{user.username}</p>
               </div>
-              
+
               {!isOwnProfile && (
                 <Button
                   onClick={handleFollow}
@@ -113,11 +118,11 @@ const ProfilePage = () => {
                 </Button>
               )}
             </div>
-            
+
             {user.bio && (
               <p className="text-gray-700 mb-4">{user.bio}</p>
             )}
-            
+
             <div className="flex space-x-6 text-sm text-gray-600">
               <div>
                 <span className="font-semibold text-gray-900">{user.postsCount || 0}</span> Posts
@@ -138,7 +143,7 @@ const ProfilePage = () => {
         <div className="p-4 border-b">
           <h2 className="text-lg font-semibold">Posts</h2>
         </div>
-        
+
         {postsLoading ? (
           <Loading />
         ) : posts.length > 0 ? (

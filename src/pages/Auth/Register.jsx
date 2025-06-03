@@ -7,9 +7,13 @@ import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     username: '',
     email: '',
+    phoneNumber: '',
+    dob: '',
+    location: '',
     password: '',
     confirmPassword: ''
   });
@@ -18,12 +22,15 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [localError, setLocalError] = useState(''); // For password mismatch validation
   const { register, loading, error } = useAuth();
-
   const validateStep1 = () => {
-    return formData.fullName.trim() && formData.username.trim() && formData.email.trim();
+    return formData.firstName.trim() && formData.lastName.trim() && formData.username.trim() && formData.email.trim();
   };
 
   const validateStep2 = () => {
+    return formData.phoneNumber.trim() && formData.dob && formData.location.trim();
+  };
+
+  const validateStep3 = () => {
     return formData.password.length >= 8 && formData.password === formData.confirmPassword;
   };
 
@@ -42,14 +49,26 @@ const Register = () => {
     if (score <= 3) return { text: 'Medium', color: 'text-yellow-500' };
     return { text: 'Strong', color: 'text-green-500' };
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       return setLocalError('Passwords do not match');
     }
     setLocalError('');
-    await register(formData);
+
+    // Format data for backend DTO
+    const registerData = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      dob: formData.dob,
+      phoneNumber: formData.phoneNumber,
+      location: formData.location
+    };
+
+    await register(registerData);
   };
 
   const handleChange = (e) => {
@@ -59,10 +78,11 @@ const Register = () => {
       [name]: value
     }));
   };
-
   const handleNextStep = () => {
     if (step === 1 && validateStep1()) {
       setStep(2);
+    } else if (step === 2 && validateStep2()) {
+      setStep(3);
     }
   };
 
@@ -80,28 +100,31 @@ const Register = () => {
             </h1>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            {/* Progress Indicator */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">            {/* Progress Indicator */}
             <div className="flex items-center justify-center mb-8">
               <div className="flex items-center space-x-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 1 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
                   1
                 </div>
-                <div className={`w-16 h-1 rounded-full ${step >= 2 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
+                <div className={`w-12 h-1 rounded-full ${step >= 2 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 2 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
                   2
                 </div>
+                <div className={`w-12 h-1 rounded-full ${step >= 3 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 3 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                  3
+                </div>
               </div>
-            </div>
-
-            <div className="text-center mb-8">
+            </div>            <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {step === 1 ? 'Create Account' : 'Secure Your Account'}
+                {step === 1 ? 'Create Account' : step === 2 ? 'Personal Information' : 'Secure Your Account'}
               </h2>
               <p className="text-gray-600">
-                {step === 1 ? 'Enter your details to get started' : 'Set up a strong password'}
+                {step === 1 ? 'Enter your basic details to get started' :
+                  step === 2 ? 'Tell us a bit more about yourself' :
+                    'Set up a strong password'}
               </p>
-            </div>            <form className="space-y-6" onSubmit={handleSubmit}>
+            </div><form className="space-y-6" onSubmit={handleSubmit}>
               {(error || localError) && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                   <div className="flex items-center">
@@ -115,24 +138,40 @@ const Register = () => {
                     </div>
                   </div>
                 </div>
-              )}
-
-              {step === 1 && (
+              )}              {step === 1 && (
                 <div className="space-y-4">
-                  <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      required
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      placeholder="Enter your full name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name
+                      </label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        required
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        placeholder="Enter your first name"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                      </label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        required
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        placeholder="Enter your last name"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -166,10 +205,60 @@ const Register = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     />
                   </div>
+                </div>)}
+
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <Input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="tel"
+                      required
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      placeholder="Enter your phone number"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth
+                    </label>
+                    <Input
+                      id="dob"
+                      name="dob"
+                      type="date"
+                      required
+                      value={formData.dob}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <Input
+                      id="location"
+                      name="location"
+                      type="text"
+                      required
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="Enter your city or location"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
                 </div>
               )}
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
@@ -256,10 +345,10 @@ const Register = () => {
               )}
 
               <div className="flex items-center justify-between">
-                {step === 2 && (
+                {(step === 2 || step === 3) && (
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(step - 1)}
                     className="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200"
                   >
                     ← Back
@@ -275,17 +364,26 @@ const Register = () => {
                   >
                     Continue
                   </Button>
+                ) : step === 2 ? (
+                  <Button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={!validateStep2()}
+                    className="flex-1 ml-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    Continue
+                  </Button>
                 ) : (
                   <Button
                     type="submit"
-                    disabled={loading || !validateStep2()}
+                    disabled={loading || !validateStep3()}
                     className="flex-1 ml-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loading ? (
                       <div className="flex items-center justify-center">
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Creating Account...
                       </div>
@@ -296,7 +394,7 @@ const Register = () => {
                 )}
               </div>
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="text-center text-xs text-gray-500">
                   By creating an account, you agree to our{' '}
                   <a href="#" className="text-purple-600 hover:text-purple-500">Terms of Service</a>

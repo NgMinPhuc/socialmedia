@@ -15,42 +15,13 @@ const FollowingPage = () => {
   useEffect(() => {
     fetchFollowing();
   }, [username]);
-
   const fetchFollowing = async () => {
     try {
-      // This would need to be implemented in userApi
-      // For now, using mock data
-      const response = await userApi.getFollowing?.(username) || [];
+      const response = await userApi.getFollowing(username);
       setFollowing(response.data || response);
     } catch (error) {
       console.error('Error fetching following:', error);
-      // Mock data for demo
-      setFollowing([
-        {
-          id: 1,
-          fullName: 'Alice Johnson',
-          username: 'alicej',
-          avatar: 'https://via.placeholder.com/40',
-          bio: 'Product Designer',
-          isFollowing: true
-        },
-        {
-          id: 2,
-          fullName: 'Bob Wilson',
-          username: 'bobw',
-          avatar: 'https://via.placeholder.com/40',
-          bio: 'Full Stack Developer',
-          isFollowing: true
-        },
-        {
-          id: 3,
-          fullName: 'Sarah Davis',
-          username: 'sarahd',
-          avatar: 'https://via.placeholder.com/40',
-          bio: 'Marketing Specialist',
-          isFollowing: true
-        }
-      ]);
+      setFollowing([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -63,10 +34,10 @@ const FollowingPage = () => {
       } else {
         await userApi.followUser(userId);
       }
-      
-      setFollowing(prev => 
-        prev.map(followedUser => 
-          followedUser.id === userId 
+
+      setFollowing(prev =>
+        prev.map(followedUser =>
+          followedUser.id === userId
             ? { ...followedUser, isFollowing: !isFollowing }
             : followedUser
         )
@@ -87,7 +58,7 @@ const FollowingPage = () => {
             {username}'s Following
           </h1>
         </div>
-        
+
         <div className="p-6">
           {following.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
@@ -98,8 +69,8 @@ const FollowingPage = () => {
               {following.map((followedUser) => (
                 <div key={followedUser.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                   <div className="flex items-center space-x-4">
-                    <Avatar 
-                      src={followedUser.avatar} 
+                    <Avatar
+                      src={followedUser.avatar}
                       alt={followedUser.fullName}
                     />
                     <div>
@@ -114,7 +85,7 @@ const FollowingPage = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {followedUser.id !== user?.id && (
                     <Button
                       onClick={() => handleFollow(followedUser.id, followedUser.isFollowing)}

@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUser());
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   // Initialize auth state
@@ -28,11 +28,11 @@ export const AuthProvider = ({ children }) => {
 
     initializeAuth();
   }, []);
-  const login = async (email, password) => {
+  const login = async (emailOrUsername, password) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.login(email, password);
+      const data = await authService.login(emailOrUsername, password);
       setUser(data.user);
       navigate('/');
       return data;
@@ -42,14 +42,19 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  const register = async (userData) => {
+  }; const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
       const data = await authService.register(userData);
-      setUser(data.user);
-      navigate('/');
+      // Registration successful but user is not automatically logged in
+      // Redirect to login page with success message
+      navigate('/auth/login', {
+        state: {
+          message: data.message || 'Registration successful! Please login to continue.',
+          registeredUsername: data.user.username
+        }
+      });
       return data;
     } catch (err) {
       setError(err.message || 'Failed to register');
@@ -85,11 +90,24 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    navigate('/auth/login');
+  }; const logout = async () => {
+    try {
+      const result = await authService.logout();
+
+      // Handle the new response format: {success: boolean, message?: string, error?: string}
+      if (result.success) {
+        console.log('Logout successful:', result.message);
+      } else {
+        console.warn('Logout had issues:', result.error);
+        // Continue with logout even if there were backend issues
+      }
+    } catch (error) {
+      console.warn('Logout failed:', error);
+      // Continue with logout even if API call fails
+    } finally {
+      setUser(null);
+      navigate('/auth/login');
+    }
   };
 
   const value = {

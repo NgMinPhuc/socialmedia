@@ -5,17 +5,17 @@ import CreatePost from '@/components/CreatePost';
 import Loading from '@/components/Loading';
 
 const Feed = () => {
-  const { getPosts } = usePosts();
+  const { getFeed } = usePosts();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0); // getFeed uses 0-based pagination
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchPosts = async (pageNumber = 1) => {
+  const fetchPosts = async (pageNumber = 0) => {
     try {
-      const response = await getPosts({ page: pageNumber });
-      if (pageNumber === 1) {
+      const response = await getFeed(pageNumber, 10);
+      if (pageNumber === 0) {
         setPosts(response.posts);
       } else {
         setPosts(prev => [...prev, ...response.posts]);
@@ -39,11 +39,10 @@ const Feed = () => {
       fetchPosts(nextPage);
     }
   };
-
   const handlePostCreated = () => {
-    // Refresh the feed
-    setPage(1);
-    fetchPosts(1);
+    // Refresh the feed from the beginning
+    setPage(0);
+    fetchPosts(0);
   };
 
   if (error) {
@@ -57,11 +56,11 @@ const Feed = () => {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       <CreatePost onPostCreated={handlePostCreated} />
-      
+
       <div className="space-y-6 mt-8">
         {posts.map(post => (
-          <Post 
-            key={post.id} 
+          <Post
+            key={post.id}
             post={post}
             onLikeUpdate={() => fetchPosts(page)}
           />

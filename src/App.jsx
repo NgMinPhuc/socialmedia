@@ -18,6 +18,7 @@ import Register from '@/pages/Auth/Register';
 import ForgotPassword from '@/pages/Auth/ForgotPassword';
 import ResetPassword from '@/pages/Auth/ResetPassword';
 
+
 function App() {
   return (
     <Router>

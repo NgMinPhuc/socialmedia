@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { postService } from '@/services';
+import { postApi } from '@/services';
 
 export const usePosts = () => {
   const [loading, setLoading] = useState(false);
@@ -8,7 +8,7 @@ export const usePosts = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await postService.createPost(postData);
+      const response = await postApi.createPost(postData);
       return response;
     } catch (err) {
       setError(err.message || 'Failed to create post');
@@ -16,15 +16,21 @@ export const usePosts = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getPosts = async (params = {}) => {
+  }; const getPosts = async (params = {}) => {
     setLoading(true);
     try {
-      const response = await postService.getPosts(params.page || 1, params.limit || 10);
+      const response = await postApi.getPosts(params.page || 1, params.size || 10);
+      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
       return {
-        posts: response.data,
-        hasMore: response.pagination ? response.pagination.page < response.pagination.totalPages : false
+        posts: response.posts || [],
+        hasMore: !response.last,
+        pagination: {
+          page: response.page,
+          size: response.size,
+          totalElements: response.totalElements,
+          totalPages: response.totalPages,
+          last: response.last
+        }
       };
     } catch (err) {
       setError(err.message || 'Failed to fetch posts');
@@ -32,14 +38,22 @@ export const usePosts = () => {
     } finally {
       setLoading(false);
     }
-  };
-  const getUserPosts = async (username) => {
+  }; const getUserPosts = async (username, page = 0, size = 10) => {
     setLoading(true);
     try {
-      const response = await postService.getUserPosts ?
-        await postService.getUserPosts(username) :
-        await postService.getPosts(1, 10); // Fallback for mock
-      return response;
+      const response = await postApi.getUserPosts(username, page + 1, size); // Convert to 1-based for API
+      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      return {
+        posts: response.posts || [],
+        hasMore: !response.last,
+        pagination: {
+          page: response.page,
+          size: response.size,
+          totalElements: response.totalElements,
+          totalPages: response.totalPages,
+          last: response.last
+        }
+      };
     } catch (err) {
       setError(err.message || 'Failed to fetch user posts');
       throw err;
@@ -49,7 +63,7 @@ export const usePosts = () => {
   };
   const likePost = async (postId) => {
     try {
-      const response = await postService.likePost(postId);
+      const response = await postApi.likePost(postId);
       return response;
     } catch (err) {
       setError(err.message || 'Failed to like post');
@@ -58,17 +72,16 @@ export const usePosts = () => {
   };
   const unlikePost = async (postId) => {
     try {
-      const response = await postService.unlikePost(postId);
+      const response = await postApi.unlikePost(postId);
       return response;
     } catch (err) {
       setError(err.message || 'Failed to unlike post');
       throw err;
     }
-  };
-  const commentOnPost = async (postId, content) => {
+  }; const commentOnPost = async (postId, content) => {
     setLoading(true);
     try {
-      const response = await postService.addComment(postId, content);
+      const response = await postApi.addComment(postId, content);
       return response;
     } catch (err) {
       setError(err.message || 'Failed to add comment');
@@ -77,7 +90,68 @@ export const usePosts = () => {
       setLoading(false);
     }
   };
+  const getFeed = async (page = 0, size = 10) => {
+    setLoading(true);
+    try {
+      const response = await postApi.getFeed(page, size);
+      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      return {
+        posts: response.posts || [],
+        hasMore: !response.last,
+        pagination: {
+          page: response.page,
+          size: response.size,
+          totalElements: response.totalElements,
+          totalPages: response.totalPages,
+          last: response.last
+        }
+      };
+    } catch (err) {
+      setError(err.message || 'Failed to fetch feed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const getPost = async (postId) => {
+    setLoading(true);
+    try {
+      const response = await postApi.getPost(postId);
+      return response;
+    } catch (err) {
+      setError(err.message || 'Failed to fetch post');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deletePost = async (postId) => {
+    setLoading(true);
+    try {
+      await postApi.deletePost(postId);
+      return { success: true };
+    } catch (err) {
+      setError(err.message || 'Failed to delete post');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getComments = async (postId, page = 0, size = 10) => {
+    setLoading(true);
+    try {
+      const response = await postApi.getComments(postId, page, size);
+      return response;
+    } catch (err) {
+      setError(err.message || 'Failed to fetch comments');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
   return {
     loading,
     error,
@@ -87,5 +161,9 @@ export const usePosts = () => {
     likePost,
     unlikePost,
     commentOnPost,
+    getFeed,
+    getPost,
+    deletePost,
+    getComments,
   };
 };

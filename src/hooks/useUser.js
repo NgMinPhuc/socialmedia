@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
-import { userService } from '@/services';
+import { userApi } from '@/services';
 
 export const useUser = () => {
   const { user, setUser } = useAuth();
@@ -10,7 +10,7 @@ export const useUser = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await userService.updateProfile(userData);
+      const response = await userApi.updateProfile(userData);
       setUser(response.data);
       return response.data;
     } catch (err) {
@@ -23,7 +23,7 @@ export const useUser = () => {
   const followUser = async (userId) => {
     setLoading(true);
     try {
-      const response = await userService.followUser(userId);
+      const response = await userApi.followUser(userId);
       return response.data;
     } catch (err) {
       setError(err.message || 'Failed to follow user');
@@ -35,7 +35,7 @@ export const useUser = () => {
   const unfollowUser = async (userId) => {
     setLoading(true);
     try {
-      const response = await userService.unfollowUser(userId);
+      const response = await userApi.unfollowUser(userId);
       return response.data;
     } catch (err) {
       setError(err.message || 'Failed to unfollow user');
@@ -47,7 +47,7 @@ export const useUser = () => {
   const getUserProfile = async (username) => {
     setLoading(true);
     try {
-      const response = await userService.getUserProfile(username);
+      const response = await userApi.getUserProfile(username);
       return response.data;
     } catch (err) {
       setError(err.message || 'Failed to get user profile');

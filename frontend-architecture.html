@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Media - Frontend Architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 300;
+    }
+
+    .header p {
+      margin: 10px 0 0;
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .diagram-section {
+      margin-bottom: 50px;
+    }
+
+    .diagram-title {
+      color: #1f2937;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #3b82f6;
+    }
+
+    .mermaid {
+      text-align: center;
+      margin: 20px 0;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .tech-stack {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .tech-item {
+      background: #f1f5f9;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .tech-item h3 {
+      margin: 0 0 10px;
+      color: #1f2937;
+    }
+
+    .tech-item p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.9em;
+    }
+
+    .features {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    .features h3 {
+      color: #1f2937;
+      margin-bottom: 15px;
+    }
+
+    .features ul {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .features li {
+      padding: 8px 0;
+      position: relative;
+      padding-left: 25px;
+    }
+
+    .tree-structure {
+      margin: 20px 0;
+    }
+
+    .tree-structure pre {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+
+    .tree-structure strong {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    .features li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .tech-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 2em;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 Social Media Platform</h1>
+      <p>Frontend Architecture & Component Structure</p>
+    </div>
+
+    <div class="content">
+      <!-- Overall Architecture -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🏗️ Overall Architecture</h2>
+        <div class="mermaid">
+          graph TB
+          subgraph "Frontend Application"
+          A[User Interface] --> B[React Components]
+          B --> C[State Management]
+          C --> D[API Services]
+          D --> E[External APIs]
+          end
+
+          subgraph "Tech Stack"
+          F[React 18]
+          G[Vite]
+          H[Tailwind CSS]
+          I[React Router]
+          J[Axios]
+          end
+
+          style A fill:#e1f5fe
+          style B fill:#f3e5f5
+          style C fill:#e8f5e8
+          style D fill:#fff3e0
+          style E fill:#ffebee
+        </div>
+      </div>
+
+      <!-- Component Hierarchy -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🧩 Detailed Component Hierarchy Tree</h2>
+        <div class="mermaid">
+          graph TD
+          App["🚀 App.jsx (Root)"] --> Router["🛣️ React Router Setup"]
+          Router --> AuthProvider["🔐 AuthContext Provider"]
+          AuthProvider --> Routes["📍 Route Definitions"]
+
+          Routes --> AuthRoutes["🔑 AuthLayout (/auth/*)"]
+          Routes --> MainRoutes["🏠 MainLayout (/*) - Protected"]
+
+          AuthRoutes --> LoginPage["📝 Login Page"]
+          AuthRoutes --> RegisterPage["📋 Register Page"]
+          AuthRoutes --> ForgotPage["🔐 Forgot Password"]
+          AuthRoutes --> ResetPage["🔄 Reset Password"]
+
+          MainRoutes --> NavbarComp["🧭 Navbar Component"]
+          MainRoutes --> SidebarComp["📁 Sidebar Component"]
+          MainRoutes --> MainContent["📱 Main Content Area"]
+
+          MainContent --> HomePage["🏠 Home/Feed"]
+          MainContent --> ProfilePages["👤 Profile Pages"]
+          MainContent --> MessagesPage["💬 Messages"]
+          MainContent --> SearchPage["🔍 Search"]
+          MainContent --> NotificationsPage["🔔 Notifications"]
+          MainContent --> SettingsPage["⚙️ Settings"]
+
+          HomePage --> FeedComp["📰 Feed Component"]
+          HomePage --> CreatePostComp["✍️ Create Post"]
+          HomePage --> PostComp["📄 Post Component"]
+
+          ProfilePages --> UserProfile["👤 User Profile"]
+          ProfilePages --> EditProfile["✏️ Edit Profile"]
+          ProfilePages --> Followers["👥 Followers"]
+          ProfilePages --> Following["🤝 Following"]
+
+          style App fill:#ff6b6b,stroke:#333,stroke-width:3px
+          style Router fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+          style AuthProvider fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+          style Routes fill:#fff3e0,stroke:#e65100,stroke-width:2px
+          style AuthRoutes fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+          style MainRoutes fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+          style NavbarComp fill:#96ceb4,stroke:#2e7d32,stroke-width:2px
+          style SidebarComp fill:#ffeaa7,stroke:#f57f17,stroke-width:2px
+          style MainContent fill:#dda0dd,stroke:#6a1b9a,stroke-width:2px
+          style HomePage fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+          style ProfilePages fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+          style MessagesPage fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+          style SearchPage fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+          style NotificationsPage fill:#ffccbc,stroke:#f4511e,stroke-width:2px
+          style SettingsPage fill:#d1c4e9,stroke:#7b1fa2,stroke-width:2px
+          style Routes fill:#dda0dd
+        </div>
+      </div>
+
+      <!-- Component Tree Structure -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🌳 Component Tree Structure</h2>
+        <div class="tree-structure">
+          <pre
+            style="font-family: 'Courier New', monospace; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; font-size: 14px; line-height: 1.6;">
+📦 <strong>App.jsx (Root)</strong>
+├── 🛣️ React Router Setup
+├── 🔐 AuthContext Provider
+└── 📍 Route Definitions
+    ├── 🔑 <strong>AuthLayout (/auth/*)</strong> → Authentication Routes
+    │   ├── 📝 Login Page
+    │   ├── 📋 Register Page
+    │   ├── 🔐 Forgot Password
+    │   └── 🔄 Reset Password
+    └── 🏠 <strong>MainLayout (/*)</strong> → Protected Routes
+        ├── 🧭 Navbar Component
+        ├── 📁 Sidebar Component
+        └── 📱 <strong>Main Content Area</strong>
+            ├── 🏠 Home/Feed
+            │   ├── 📰 Feed Component
+            │   ├── ✍️ Create Post
+            │   └── 📄 Post Component
+            ├── 👤 Profile Pages
+            │   ├── 👤 User Profile
+            │   ├── ✏️ Edit Profile
+            │   ├── 👥 Followers
+            │   └── 🤝 Following
+            ├── 💬 Messages
+            ├── 🔍 Search
+            ├── 🔔 Notifications
+            └── ⚙️ Settings
+          </pre>
+        </div>
+      </div>
+
+      <!-- State Management -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🔄 State Management & Data Flow</h2>
+        <div class="mermaid">
+          graph LR
+          subgraph "Context Providers"
+          AuthContext[AuthContext]
+          end
+
+          subgraph "Custom Hooks"
+          usePosts[usePosts]
+          useUser[useUser]
+          useNotifications[useNotifications]
+          end
+
+          subgraph "API Services"
+          postApi[postApi.js]
+          userApi[userApi.js]
+          authService[authService.js]
+          chatService[chatService.js]
+          notificationApi[notificationApi.js]
+          end
+
+          subgraph "External"
+          Backend[Backend API]
+          WebSocket[WebSocket]
+          end
+
+          AuthContext --> usePosts
+          AuthContext --> useUser
+          AuthContext --> useNotifications
+
+          usePosts --> postApi
+          useUser --> userApi
+          useUser --> authService
+          useNotifications --> notificationApi
+
+          postApi --> Backend
+          userApi --> Backend
+          authService --> Backend
+          chatService --> WebSocket
+          notificationApi --> Backend
+
+          style AuthContext fill:#ff9ff3
+          style usePosts fill:#54a0ff
+          style useUser fill:#5f27cd
+          style useNotifications fill:#00d2d3
+          style Backend fill:#ff6348
+          style WebSocket fill:#2ed573
+        </div>
+      </div>
+
+      <!-- Routing Structure -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🛣️ Routing Structure</h2>
+        <div class="mermaid">
+          graph TD
+          Root["/"] --> AuthRoutes["/auth"]
+          Root --> MainRoutes["/ (Protected)"]
+
+          AuthRoutes --> LoginRoute["/auth/login"]
+          AuthRoutes --> RegisterRoute["/auth/register"]
+          AuthRoutes --> ForgotRoute["/auth/forgot-password"]
+          AuthRoutes --> ResetRoute["/auth/reset-password"]
+
+          MainRoutes --> HomeRoute["/"]
+          MainRoutes --> ExploreRoute["/explore"]
+          MainRoutes --> ProfileRoute["/profile/:userId"]
+          MainRoutes --> EditProfileRoute["/profile/edit"]
+          MainRoutes --> FollowersRoute["/profile/:username/followers"]
+          MainRoutes --> FollowingRoute["/profile/:username/following"]
+          MainRoutes --> SearchRoute["/search"]
+          MainRoutes --> MessagesRoute["/messages"]
+          MainRoutes --> NotificationsRoute["/notifications"]
+          MainRoutes --> SettingsRoute["/settings"]
+          MainRoutes --> MyPostsRoute["/myposts"]
+
+          style AuthRoutes fill:#feca57
+          style MainRoutes fill:#48dbfb
+          style LoginRoute fill:#ff9ff3
+          style RegisterRoute fill:#ff9ff3
+          style HomeRoute fill:#54a0ff
+          style ProfileRoute fill:#5f27cd
+          style MessagesRoute fill:#00d2d3
+        </div>
+      </div>
+
+      <!-- UI Components -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🎨 UI Components Structure</h2>
+        <div class="mermaid">
+          graph TD
+          UIComponents[UI Components] --> Button[Button.jsx]
+          UIComponents --> Input[Input.jsx]
+          UIComponents --> Avatar[Avatar.jsx]
+
+          FeatureComponents[Feature Components] --> Navbar2[Navbar]
+          FeatureComponents --> Sidebar2[Sidebar]
+          FeatureComponents --> Feed2[Feed]
+          FeatureComponents --> Post2[Post]
+          FeatureComponents --> CreatePost2[CreatePost]
+          FeatureComponents --> Loading[Loading]
+
+          PageComponents[Page Components] --> AuthPages[Auth Pages]
+          PageComponents --> UserPages[User Pages]
+          PageComponents --> SocialPages[Social Pages]
+
+          AuthPages --> LoginPage[Login]
+          AuthPages --> RegisterPage[Register]
+
+          UserPages --> ProfilePage[Profile]
+          UserPages --> EditProfilePage[Edit Profile]
+          UserPages --> FollowersPage[Followers]
+
+          SocialPages --> HomePage[Home]
+          SocialPages --> MessagesPage[Messages]
+          SocialPages --> SearchPage[Search]
+          SocialPages --> NotificationsPage[Notifications]
+          SocialPages --> SettingsPage[Settings]
+
+          style UIComponents fill:#ff6b6b
+          style FeatureComponents fill:#4ecdc4
+          style PageComponents fill:#45b7d1
+          style AuthPages fill:#96ceb4
+          style UserPages fill:#ffeaa7
+          style SocialPages fill:#dda0dd
+        </div>
+      </div>
+
+      <!-- Technology Stack -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">🛠️ Technology Stack</h2>
+        <div class="tech-stack">
+          <div class="tech-item">
+            <h3>⚛️ React 18</h3>
+            <p>Modern UI library with hooks and functional components</p>
+          </div>
+          <div class="tech-item">
+            <h3>⚡ Vite</h3>
+            <p>Fast build tool and development server</p>
+          </div>
+          <div class="tech-item">
+            <h3>🎨 Tailwind CSS</h3>
+            <p>Utility-first CSS framework for responsive design</p>
+          </div>
+          <div class="tech-item">
+            <h3>🛣️ React Router</h3>
+            <p>Client-side routing and navigation</p>
+          </div>
+          <div class="tech-item">
+            <h3>📡 Axios</h3>
+            <p>HTTP client for API communication</p>
+          </div>
+          <div class="tech-item">
+            <h3>🎭 Context API</h3>
+            <p>State management for authentication</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="features">
+        <h3>✨ Key Features</h3>
+        <ul>
+          <li>User Authentication (Login/Register/Reset Password)</li>
+          <li>User Profiles with Avatar and Bio</li>
+          <li>Create, View, Like, and Comment on Posts</li>
+          <li>Real-time Messaging System</li>
+          <li>Follow/Unfollow System</li>
+          <li>Search Users and Posts</li>
+          <li>Notifications System</li>
+          <li>Responsive Design (Mobile/Tablet/Desktop)</li>
+          <li>Settings and Profile Management</li>
+          <li>Image Upload and Preview</li>
+          <li>Loading States and Error Handling</li>
+          <li>Modern UI with Tailwind CSS</li>
+        </ul>
+      </div>
+
+      <!-- Responsive Design -->
+      <div class="diagram-section">
+        <h2 class="diagram-title">📱 Responsive Design Breakpoints</h2>
+        <div class="mermaid">
+          graph LR
+          Mobile["📱 Mobile<br />320px - 767px"] --> Features1["• Hidden Sidebar<br />• Single Column<br />• Touch UI"]
+          Tablet["📟 Tablet<br />768px - 1023px"] --> Features2["• Visible Sidebar<br />• Adaptive Layout<br />• Mixed
+          UI"]
+          Desktop["🖥️ Desktop<br />1024px+"] --> Features3["• Full Layout<br />• Multi-column<br />• Mouse/Keyboard"]
+
+          style Mobile fill:#ff6b6b
+          style Tablet fill:#4ecdc4
+          style Desktop fill:#45b7d1
+          style Features1 fill:#ffcccc
+          style Features2 fill:#ccf2f0
+          style Features3 fill:#cce7f0
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      themeVariables: {
+        primaryColor: '#3b82f6',
+        primaryTextColor: '#1f2937',
+        primaryBorderColor: '#3b82f6',
+        lineColor: '#6b7280',
+        secondaryColor: '#f1f5f9',
+        tertiaryColor: '#f8fafc'
+      }
+    });
+  </script>
+</body>
+
+</html>

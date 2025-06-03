@@ -1,105 +1,42 @@
-import { useState, useEffect } from 'react';
-import { notificationApi } from '@/services';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
 import Button from '@/ui/Button';
 
 const NotificationsPage = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [markingAsRead, setMarkingAsRead] = useState(false);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const response = await notificationApi.getNotifications();
-      setNotifications(response.data || response);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await notificationApi.markAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, read: true }
-            : notif
-        )
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    setMarkingAsRead(true);
-    try {
-      await notificationApi.markAllAsRead();
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    } finally {
-      setMarkingAsRead(false);
-    }
-  };
-
-  const getNotificationMessage = (notification) => {
-    const { type, user: notifUser, post } = notification;
-    
-    switch (type) {
-      case 'LIKE':
-        return `${notifUser.fullName} liked your post`;
-      case 'COMMENT':
-        return `${notifUser.fullName} commented on your post`;
-      case 'FOLLOW':
-        return `${notifUser.fullName} started following you`;
-      case 'MENTION':
-        return `${notifUser.fullName} mentioned you in a post`;
-      default:
-        return 'New notification';
-    }
-  };
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'LIKE':
-        return '❤️';
-      case 'COMMENT':
-        return '💬';
-      case 'FOLLOW':
-        return '👤';
-      case 'MENTION':
-        return '@';
-      default:
-        return '🔔';
-    }
-  };
-
+  const {
+    notifications,
+    loading,
+    error,
+    markingAsRead,
+    hasUnreadNotifications,
+    markAsRead,
+    markAllAsRead,
+    getNotificationMessage,
+    getNotificationIcon
+  } = useNotifications();
   if (loading) {
     return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="bg-white rounded-lg shadow-md">
-        {/* Header */}
-        <div className="p-6 border-b flex items-center justify-between">
+        {/* Header */}        <div className="p-6 border-b flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          {notifications.some(n => !n.read) && (
+          {hasUnreadNotifications && (
             <Button
-              onClick={handleMarkAllAsRead}
+              onClick={markAllAsRead}
               disabled={markingAsRead}
               variant="outline"
               size="sm"
@@ -116,16 +53,16 @@ const NotificationsPage = () => {
             <p className="text-gray-500">No notifications yet</p>
           </div>
         ) : (
-          <div className="divide-y">
-            {notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={handleMarkAsRead}
-                getMessage={getNotificationMessage}
-                getIcon={getNotificationIcon}
-              />
-            ))}
+          <div className="divide-y">            
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onMarkAsRead={markAsRead}
+              getMessage={getNotificationMessage}
+              getIcon={getNotificationIcon}
+            />
+          ))}
           </div>
         )}
       </div>
@@ -159,9 +96,8 @@ const NotificationItem = ({ notification, onMarkAsRead, getMessage, getIcon }) =
   return (
     <div
       onClick={handleClick}
-      className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-        !read ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-      }`}
+      className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${!read ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+        }`}
     >
       <div className="flex items-start space-x-3">
         <div className="relative">
@@ -170,7 +106,7 @@ const NotificationItem = ({ notification, onMarkAsRead, getMessage, getIcon }) =
             <span className="text-xs">{getIcon(notification.type)}</span>
           </div>
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <p className="text-sm text-gray-900">
             {getMessage(notification)}
@@ -178,7 +114,7 @@ const NotificationItem = ({ notification, onMarkAsRead, getMessage, getIcon }) =
           <p className="text-xs text-gray-500 mt-1">
             {formatTime(createdAt)}
           </p>
-          
+
           {post && (
             <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
               {post.content?.substring(0, 100)}
@@ -186,7 +122,7 @@ const NotificationItem = ({ notification, onMarkAsRead, getMessage, getIcon }) =
             </div>
           )}
         </div>
-        
+
         {!read && (
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         )}

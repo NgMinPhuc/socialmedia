@@ -15,34 +15,13 @@ const FollowersPage = () => {
   useEffect(() => {
     fetchFollowers();
   }, [username]);
-
   const fetchFollowers = async () => {
     try {
-      // This would need to be implemented in userApi
-      // For now, using mock data
-      const response = await userApi.getFollowers?.(username) || [];
+      const response = await userApi.getFollowers(username);
       setFollowers(response.data || response);
     } catch (error) {
       console.error('Error fetching followers:', error);
-      // Mock data for demo
-      setFollowers([
-        {
-          id: 1,
-          fullName: 'John Doe',
-          username: 'johndoe',
-          avatar: 'https://via.placeholder.com/40',
-          bio: 'Software Developer',
-          isFollowing: true
-        },
-        {
-          id: 2,
-          fullName: 'Jane Smith',
-          username: 'janesmith',
-          avatar: 'https://via.placeholder.com/40',
-          bio: 'UI/UX Designer',
-          isFollowing: false
-        }
-      ]);
+      setFollowers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -55,10 +34,10 @@ const FollowersPage = () => {
       } else {
         await userApi.followUser(userId);
       }
-      
-      setFollowers(prev => 
-        prev.map(follower => 
-          follower.id === userId 
+
+      setFollowers(prev =>
+        prev.map(follower =>
+          follower.id === userId
             ? { ...follower, isFollowing: !isFollowing }
             : follower
         )
@@ -80,7 +59,7 @@ const FollowersPage = () => {
             {username}'s Followers
           </h1>
         </div>
-        
+
         <div className="p-6">
           {followers.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
@@ -91,8 +70,8 @@ const FollowersPage = () => {
               {followers.map((follower) => (
                 <div key={follower.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                   <div className="flex items-center space-x-4">
-                    <Avatar 
-                      src={follower.avatar} 
+                    <Avatar
+                      src={follower.avatar}
                       alt={follower.fullName}
                     />
                     <div>
@@ -107,7 +86,7 @@ const FollowersPage = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {follower.id !== user?.id && (
                     <Button
                       onClick={() => handleFollow(follower.id, follower.isFollowing)}

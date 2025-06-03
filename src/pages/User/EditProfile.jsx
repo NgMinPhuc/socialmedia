@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/hooks/useUser';
 import Button from '@/ui/Button';
 import Input from '@/ui/Input';
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { updateProfile } = useUser();
   const [formData, setFormData] = useState({
     name: user?.name || '',
     bio: user?.bio || '',
@@ -36,15 +38,15 @@ const EditProfilePage = () => {
       reader.readAsDataURL(file);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // TODO: Implement update profile API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updatedUser = await updateProfile(formData);
+      // Update the user in the auth context
+      updateUser(updatedUser);
       navigate(`/profile/${user?.username}`);
     } catch (err) {
       setError(err.message || 'Failed to update profile');
