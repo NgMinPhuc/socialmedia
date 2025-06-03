@@ -12,10 +12,16 @@
         <option value="$PROJECT_DIR$/eureka-server/pom.xml" />
         <option value="$PROJECT_DIR$/notification-service/pom.xml" />
         <option value="$PROJECT_DIR$/backend/services/authen-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/infrastructure/api-gateway-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/infrastructure/eureka-server/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/services/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/services/post-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/services/search-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/services/user-service/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" project-jdk-name="ms-21" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" project-jdk-name="ms-21 (2)" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

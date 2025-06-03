@@ -1,11 +1,10 @@
 package com.socialmedia.authen_service.controller;
 
 import com.nimbusds.jose.JOSEException;
+import com.socialmedia.authen_service.dto.ApiResponse;
 import com.socialmedia.authen_service.dto.request.*;
-import com.socialmedia.authen_service.dto.response.ApiResponse;
-import com.socialmedia.authen_service.dto.response.LoginResponse;
-import com.socialmedia.authen_service.dto.response.MessageResponse;
-import com.socialmedia.authen_service.dto.response.ValidateTokenResponse;
+import com.socialmedia.authen_service.dto.response.*;
+import com.socialmedia.authen_service.entity.User;
 import com.socialmedia.authen_service.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -32,29 +31,31 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<MessageResponse> register(@RequestBody @Valid RegisterRequest request) {
-        MessageResponse response = authService.register(request);
-        return ApiResponse.<MessageResponse>builder()
+    public ApiResponse<RegisterResponse> register(@RequestBody @Valid RegisterRequest request) {
+        RegisterResponse response = authService.register(request);
+        return ApiResponse.<RegisterResponse>builder()
                 .code(200)
+                .message("User registered successfully")
                 .result(response)
                 .build();
     }
 
+
     @PostMapping("/refreshToken")
-    public ApiResponse<LoginResponse> refresh(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
-        LoginResponse response = authService.refreshToken(request);
-        return ApiResponse.<LoginResponse>builder()
+    public ApiResponse<RefreshResponse> refresh(@RequestBody @Valid RefreshRequest request) throws ParseException, JOSEException {
+        RefreshResponse response = authService.refreshToken(request);
+        return ApiResponse.<RefreshResponse>builder()
                 .code(200)
                 .result(response)
                 .build();
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
-        authService.logout(request);
-        return ApiResponse.<Void>builder()
+    public ApiResponse<LogoutResponse> logout(@RequestBody @Valid LogoutRequest request) throws ParseException, JOSEException {
+        LogoutResponse response = authService.logout(request);
+        return ApiResponse.<LogoutResponse>builder()
                 .code(200)
-                .message("Logout successful")
+                .result(response)
                 .build();
     }
 
@@ -68,16 +69,16 @@ public class AuthController {
     }
 
     @PostMapping("/changePassword")
-    public ApiResponse<Void> changePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid ChangePasswordRequest request) throws ParseException, JOSEException {
+    public ApiResponse<ChangePasswordResponse> changePassword(
+            User user,
+            @RequestBody @Valid ChangePasswordRequest request
+    ) throws ParseException, JOSEException {
 
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
-        authService.changePassword(token, request);
-        return ApiResponse.<Void>builder()
+        String username = user.getUsername();
+        ChangePasswordResponse response = authService.changePassword(username, request);
+        return ApiResponse.<ChangePasswordResponse>builder()
                 .code(200)
-                .message("Password changed successfully")
+                .result(response)
                 .build();
     }
 }

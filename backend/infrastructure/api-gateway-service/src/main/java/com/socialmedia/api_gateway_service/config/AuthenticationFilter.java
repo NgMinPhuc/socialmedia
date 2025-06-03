@@ -20,6 +20,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -32,20 +33,12 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     ValidationService validationService;
-    ObjectMapper objectMapper;    @NonFinal
+    ObjectMapper objectMapper;
+    
+    @NonFinal
     private String[] publicEndpoints = {
-            "/auth/login",
-            "/auth/register", 
-            "/auth/refreshToken",
-            "/auth/validateToken",
-            "/health",
-            "/auth/health",
-            "/users/health",
-            "/posts/health",
-            "/search/health",
-            "/notifications/health", 
-            "/chat/health",
-            "/actuator/.*"
+            "/auth/.*",
+            "/auth/register"
     };
 
     @Value("${app.api-prefix}")
@@ -56,12 +49,19 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         log.info("Enter authentication filter....");
 
-        if (isPublicEndpoint(exchange.getRequest())) return chain.filter(exchange);
+        if (isPublicEndpoint(exchange.getRequest()))
+            return chain.filter(exchange);
 
-        List<String> authHeader = exchange.getRequest().getHeaders().get("Authorization");
-        if (CollectionUtils.isEmpty(authHeader)) return unauthenticated(exchange.getResponse());
+        List<String> authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
+        if (CollectionUtils.isEmpty(authHeader))
+            return unauthenticated(exchange.getResponse());
 
         String token = authHeader.getFirst().replace("Bearer ", "");
+//        if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
+//            return unauthenticated(exchange.getResponse());
+//        }
+//
+//        token = token.replace("Bearer ", "");
         log.info("Token: {}", token);
 
         return validationService.validateToken(token)
@@ -77,35 +77,15 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 });
     }
 
-
     @Override
     public int getOrder() {
         return -1;
     }
 
-    private boolean isPublicEndpoint(ServerHttpRequest request) {
-        String path = request.getURI().getPath();
-        log.info("Checking path: {} against patterns with prefix: {}", path, apiPrefix);
-        
-        // For API path like "/api/v1/auth/register"
-        // We need to check it against patterns like "/auth/register" with prefix "api/v1" 
-        boolean isPublic = false;
-        
-        for (String endpoint : publicEndpoints) {
-            String fullPattern = "/" + apiPrefix + endpoint;
-            String plainPattern = fullPattern.replace(".*", "");
-            log.info("Testing if path '{}' starts with '{}'", path, plainPattern);
-            if (path.startsWith(plainPattern)) {
-                isPublic = true;
-                break;
-            }
-        }
-        
-        log.info("Path '{}' is public: {}", path, isPublic);
-        return isPublic;
+    private boolean isPublicEndpoint(ServerHttpRequest request){
+        return Arrays.stream(publicEndpoints)
+                .anyMatch(s -> request.getURI().getPath().matches(apiPrefix + s));
     }
-
-
 
     Mono<Void> unauthenticated(ServerHttpResponse response){
         ApiResponse<?> apiResponse = ApiResponse.builder()

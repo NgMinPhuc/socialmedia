@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { usePosts } from '@/hooks/usePosts';
+import { postApi } from 'src/service';
 import Post from '@/components/Post';
 import CreatePost from '@/components/CreatePost';
 import Loading from '@/components/Loading';
 
 const Feed = () => {
-  const { getPosts } = usePosts();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,28 +12,25 @@ const Feed = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const fetchPosts = async (pageNumber = 1) => {
+    setLoading(true);
     try {
-      console.log('Feed: Fetching posts...');
-      const response = await getPosts({ page: pageNumber - 1, size: 10 }); // Backend uses 0-based pagination
-      
+      const response = await postApi.getPosts(pageNumber, 10);
       if (pageNumber === 1) {
-        setPosts(response.result?.content || []);
+        setPosts(response.content);
       } else {
-        setPosts(prev => [...prev, ...(response.result?.content || [])]);
+        setPosts(prev => [...prev, ...response.content]);
       }
-      setHasMore(!response.result?.last);
-      console.log('Feed: Posts fetched successfully');
+      setHasMore(response.number + 1 < response.totalPages);
     } catch (err) {
-      console.error('Feed: Error fetching posts:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to fetch posts');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('Feed: useEffect triggered');
     fetchPosts();
+    // eslint-disable-next-line
   }, []);
 
   const handleLoadMore = () => {
@@ -46,7 +42,6 @@ const Feed = () => {
   };
 
   const handlePostCreated = () => {
-    // Refresh the feed
     setPage(1);
     fetchPosts(1);
   };
@@ -62,19 +57,16 @@ const Feed = () => {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       <CreatePost onPostCreated={handlePostCreated} />
-      
       <div className="space-y-6 mt-8">
         {posts.map(post => (
           <Post 
-            key={post.postId || post.id} 
+            key={post.id} 
             post={post}
-            onUpdate={() => fetchPosts(page)}
+            onLikeUpdate={() => fetchPosts(page)}
           />
         ))}
       </div>
-
       {loading && <Loading />}
-
       {!loading && hasMore && (
         <div className="text-center mt-8">
           <button
@@ -85,13 +77,11 @@ const Feed = () => {
           </button>
         </div>
       )}
-
       {!loading && !hasMore && posts.length > 0 && (
         <div className="text-center text-gray-500 mt-8">
           No more posts to load
         </div>
       )}
-
       {!loading && posts.length === 0 && (
         <div className="text-center text-gray-500 mt-8">
           No posts yet. Be the first to post!

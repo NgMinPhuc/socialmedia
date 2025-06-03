@@ -1,15 +1,17 @@
 package com.socialmedia.user_service.entity;
 
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -17,15 +19,15 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Node("user profile")
+@Node("UserProfile")
 public class UserProfile {
 
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
-    String id;
-
-    @Property("userId")
     String userId;
+
+    @Property("authenId")
+    String authenId;
 
     @Property("firstName")
     String firstName;
@@ -34,7 +36,7 @@ public class UserProfile {
     String lastName;
 
     @Property("userName")
-    String userName;
+    String username;
 
     @Property("dateOfBirth")
     LocalDate dob;
@@ -47,8 +49,4 @@ public class UserProfile {
 
     @Property("email")
     String email;
-
-    @Property("avatar")
-    byte[] avatar;
-
 }

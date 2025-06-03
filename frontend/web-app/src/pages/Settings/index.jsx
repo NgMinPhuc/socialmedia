@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { userApi } from '@/services';
+import { userApi } from 'src/service';
 import Avatar from '@/ui/Avatar';
 import Input from '@/ui/Input';
 import Button from '@/ui/Button';

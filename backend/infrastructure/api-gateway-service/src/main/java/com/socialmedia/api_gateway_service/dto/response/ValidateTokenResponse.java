@@ -1,12 +1,14 @@
 package com.socialmedia.api_gateway_service.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ValidateTokenResponse {
-    private boolean isValid;
-    private String userId;
-    private String username;
+    boolean valid;
 }

@@ -1,33 +1,46 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline';
-import { usePosts } from '@/hooks/usePosts';
-import { useAuth } from '@/contexts/AuthContext';
+import { HeartIcon, ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { postApi } from 'src/service';
 import Avatar from '@/ui/Avatar';
 import Button from '@/ui/Button';
 
-const Post = ({ post, onUpdate }) => {
-  const { createComment } = usePosts();
-  const { user } = useAuth();
+const Post = ({ post, onLikeUpdate }) => {
+  const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [likesCount, setLikesCount] = useState(post.likesCount);
   const [comment, setComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const handleLikeClick = async () => {
+    try {
+      if (isLiked) {
+        await postApi.unlikePost(post.id);
+        setLikesCount(prev => prev - 1);
+      } else {
+        await postApi.likePost(post.id);
+        setLikesCount(prev => prev + 1);
+      }
+      setIsLiked(!isLiked);
+      onLikeUpdate?.();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!comment.trim() || !user) return;
+    if (!comment.trim()) return;
 
     setLoading(true);
     try {
-      await createComment({
-        postId: post.postId || post.id,
-        userId: user, // user is the username or user ID
-        content: comment
-      });
+      // Nếu muốn mock comment, có thể thêm vào post.comments ở FE
+      // await postApi.commentOnPost(post.id, comment); // Nếu có hàm này trong mock
       setComment('');
       setIsCommenting(false);
-      onUpdate?.(); // Refresh the post data
+      // Có thể trigger refresh comments nếu cần
     } catch (error) {
       console.error('Error posting comment:', error);
     } finally {
@@ -35,35 +48,41 @@ const Post = ({ post, onUpdate }) => {
     }
   };
 
+  // Fix lỗi Invalid time value
+  let timeAgo = '';
+  if (post.createdAt) {
+    const date = new Date(post.createdAt);
+    if (!isNaN(date)) {
+      timeAgo = formatDistanceToNow(date, { addSuffix: true });
+    }
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
       {/* Post Header */}
       <div className="flex items-center space-x-3 mb-4">
-        <Link to={`/profile/${post.userId}`}>
-          <Avatar src={post.author?.avatar} alt={post.author?.name || post.userId} />
+        <Link to={`/profile/${post.author.username}`}>
+          <Avatar src={post.author.avatar} alt={post.author.name} />
         </Link>
         <div>
           <Link 
-            to={`/profile/${post.userId}`}
+            to={`/profile/${post.author.username}`}
             className="font-medium hover:underline"
           >
-            {post.author?.name || post.userId}
+            {post.author.name}
           </Link>
           <p className="text-sm text-gray-500">
-            {post.createdAt ? 
-              formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) :
-              'Just now'
-            }
+            {timeAgo}
           </p>
         </div>
       </div>
 
       {/* Post Content */}
-      <p className="text-gray-800 mb-4">{post.caption}</p>
+      <p className="text-gray-800 mb-4">{post.content}</p>
       
-      {post.files && post.files.length > 0 && (
+      {post.image && (
         <img 
-          src={post.files[0]} 
+          src={post.image} 
           alt="Post content" 
           className="rounded-lg w-full mb-4 object-cover max-h-96"
         />
@@ -72,16 +91,26 @@ const Post = ({ post, onUpdate }) => {
       {/* Post Actions */}
       <div className="flex items-center justify-between pt-4 border-t">
         <button
+          onClick={handleLikeClick}
+          className={`flex items-center space-x-2 ${
+            isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+          }`}
+        >
+          {isLiked ? (
+            <HeartIconSolid className="h-6 w-6" />
+          ) : (
+            <HeartIcon className="h-6 w-6" />
+          )}
+          <span>{likesCount}</span>
+        </button>
+
+        <button
           onClick={() => setIsCommenting(!isCommenting)}
           className="flex items-center space-x-2 text-gray-500 hover:text-blue-500"
         >
           <ChatBubbleLeftIcon className="h-6 w-6" />
           <span>{post.commentsCount || 0}</span>
         </button>
-
-        <div className="flex items-center space-x-2 text-gray-500">
-          <span>❤️ {post.likesCount || 0}</span>
-        </div>
 
         <button className="flex items-center space-x-2 text-gray-500 hover:text-green-500">
           <ShareIcon className="h-6 w-6" />

@@ -1,11 +1,10 @@
 package com.socialmedia.post_service.dto.response.post;
 
-import com.socialmedia.post_service.dto.response.UserDTO;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -15,16 +14,13 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostResponse {
-    String postId;
-    String userId;
+    String id;
+    String authenId;
     String caption;
-    List<String> files; // Changed from MultipartFile to String URLs
-    List<String> contentTypes = new ArrayList<>();
-    String privacy;
-    List<String> listCommentId;
+    List<String> mediaUrls;
     Integer likesCount;
     Integer commentsCount;
-    UserDTO author; // Added user information
+    String privacy;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

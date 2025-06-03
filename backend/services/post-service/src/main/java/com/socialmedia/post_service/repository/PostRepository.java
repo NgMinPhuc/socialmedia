@@ -9,25 +9,23 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
-    List<Post> findByUserIdOrderByCreatedAtDesc(String userId);
-    Page<Post> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+    List<Post> findByAuthenIdOrderByCreatedAtDesc(String authenId);
+
+    Page<Post> findAllByAuthenId(String authenId, Pageable pageable);
+
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
-    
-    // Advanced filtering methods
-    Page<Post> findByUserIdInOrderByCreatedAtDesc(List<String> userIds, Pageable pageable);
-    
-    Page<Post> findByContentTypesContainingOrderByCreatedAtDesc(String contentType, Pageable pageable);
-    
+
+    Optional<Post> findByIdAndAuthenId(String id, String authenId);
+
+    Page<Post> findByAuthenIdInOrderByCreatedAtDesc(List<String> authenIds, Pageable pageable);
+
     Page<Post> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime from, LocalDateTime to, Pageable pageable);
-    
-    Page<Post> findByPrivacyOrderByCreatedAtDesc(String privacy, Pageable pageable);
-    
+
+
     @Query("{'caption': {$regex: ?0, $options: 'i'}}")
     Page<Post> findByCaptionContainingOrderByCreatedAtDesc(String searchQuery, Pageable pageable);
-    
-    @Query("{'userId': {'$in': ?0}, 'contentTypes': {'$in': ?1}, 'createdAt': {'$gte': ?2, '$lte': ?3}, 'privacy': ?4}")
-    Page<Post> findWithFilters(List<String> userIds, List<String> contentTypes, LocalDateTime from, LocalDateTime to, String privacy, Pageable pageable);
 }

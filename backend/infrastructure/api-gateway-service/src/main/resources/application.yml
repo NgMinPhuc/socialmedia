@@ -1,11 +1,17 @@
 server:
   port: 8080
-  
+
+app:
+  api-prefix: /api/v1
+
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
       discovery:
         locator:
           enabled: true
@@ -14,116 +20,32 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/v1/auth/**
+            - Path=${app.api-prefix}/auth/**
           filters:
             - StripPrefix=2
-            - name: Retry
-              args:
-                retries: 3
-                statuses: BAD_GATEWAY
-                backoff:
-                  firstBackoff: 10ms
-                  maxBackoff: 50ms
-                  factor: 2
-                  basedOnPreviousValue: false
-            
+
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/users/**
+            - Path=${app.api-prefix}/users/**
           filters:
             - StripPrefix=2
-            - name: CircuitBreaker
-              args:
-                name: userCircuitBreaker
-                fallbackUri: forward:/fallback
-                
-        - id: post-service
-          uri: lb://post-service
-          predicates:
-            - Path=/api/v1/posts/**, /api/v1/feed/**
-          filters:
-            - RewritePath=/api/v1/(?<segment>.*), /$\{segment}
-            - name: CircuitBreaker
-              args:
-                name: postCircuitBreaker
-                fallbackUri: forward:/fallback
-                
-        - id: chat-service
-          uri: lb://chat-service
-          predicates:
-            - Path=/api/v1/chat/**
-          filters:
-            - StripPrefix=2
-            - name: CircuitBreaker
-              args:
-                name: chatCircuitBreaker
-                fallbackUri: forward:/fallback
-                
-        - id: search-service
-          uri: lb://search-service
-          predicates:
-            - Path=/api/v1/search/**
-          filters:
-            - StripPrefix=2
-            - name: CircuitBreaker
-              args:
-                name: searchCircuitBreaker
-                fallbackUri: forward:/fallback
-                
+
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/v1/notifications/**
+            - Path=${app.api-prefix}/notifications/**
           filters:
             - StripPrefix=2
-            - name: CircuitBreaker
-              args:
-                name: notificationCircuitBreaker
-                fallbackUri: forward:/fallback
-  
+
+        - id: posts-service
+          uri: lb://posts-service
+          predicates:
+            - Path=${app.api-prefix}/feed/**
+          filters:
+            - StripPrefix=2
+
+data:
   redis:
     host: localhost
     port: 6379
-    
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        slidingWindowSize: 10
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10000
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-        
-  timelimiter:
-    configs:
-      default:
-        timeoutDuration: 5s
-        
-  ratelimiter:
-    configs:
-      default:
-        limitForPeriod: 100
-        limitRefreshPeriod: 1s
-        timeoutDuration: 1s
-      auth:
-        limitForPeriod: 20
-        limitRefreshPeriod: 1s
-        timeoutDuration: 1s
-        
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    preferIpAddress: true
-    
-jwt:
-  public-key-location: classpath:public.pem
-    
-logging:
-  level:
-    org.springframework.cloud.gateway: INFO
-    org.springframework.http.server.reactive: INFO
-    reactor.netty: INFO

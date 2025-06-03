@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/ui/Button';
 import Input from '@/ui/Input';
-import { DEFAULT_AVATAR } from '@/utils/constants';
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
@@ -68,7 +67,7 @@ const EditProfilePage = () => {
 
           <div className="flex items-center space-x-4">
             <img
-              src={formData.avatar || DEFAULT_AVATAR}
+              src={formData.avatar || 'https://via.placeholder.com/100'}
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover"
             />

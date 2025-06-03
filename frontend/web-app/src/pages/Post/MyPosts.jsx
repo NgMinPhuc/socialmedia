@@ -2,29 +2,26 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Post from '@/components/Post';
 import Loading from '@/components/Loading';
-import { usePosts } from '@/hooks/usePosts';
+import { postApi } from 'src/service';
 
 const MyPostsPage = () => {
   const { user } = useAuth();
-  const { getPosts } = usePosts();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
-      if (!user) return;
-      
+    const fetchMyPosts = async () => {
+      setLoading(true);
       try {
-        const response = await getPosts({ userId: user, page: 0, size: 20 });
-        setPosts(response.result?.content || []);
+        const response = await postApi.getUserPosts(user?.username);
+        setPosts(response.data || response);
       } catch (error) {
-        console.error('Error fetching user posts:', error);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchUserPosts();
+    if (user?.username) fetchMyPosts();
   }, [user]);
 
   if (loading) {

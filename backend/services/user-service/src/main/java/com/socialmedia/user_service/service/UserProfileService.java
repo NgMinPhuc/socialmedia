@@ -1,188 +1,103 @@
 package com.socialmedia.user_service.service;
 
-import com.socialmedia.user_service.dto.request.AvatarUploadRequest;
 import com.socialmedia.user_service.dto.request.UserProfileCreationRequest;
 import com.socialmedia.user_service.dto.request.UserProfileUpdationRequest;
 import com.socialmedia.user_service.dto.response.UserProfileResponse;
 import com.socialmedia.user_service.entity.UserProfile;
 import com.socialmedia.user_service.exception.AppException;
 import com.socialmedia.user_service.exception.ErrorCode;
-import com.socialmedia.user_service.mapper.UserProfileMapper;
 import com.socialmedia.user_service.repository.UserProfileRepository;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidationException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileService {
 
-    @Autowired
-    final UserProfileRepository userProfileRepository;
-    final UserProfileMapper userProfileMapper;
-    
-    @Value("${app.avatar.max-size:5242880}") // 5MB default
-    private long maxAvatarSize;
-    
-    @Autowired
-    private Validator validator;
-    
-    public UserProfileResponse updateAvatar(AvatarUploadRequest request) {
-        // Validate request
-        validate(request);
-        
-        if (request.getAvatar().getSize() > maxAvatarSize) {
-            throw new AppException(ErrorCode.AVATAR_SIZE_EXCEEDED);
-        }
-        
-        if (!isImageFile(request.getAvatar())) {
-            throw new AppException(ErrorCode.INVALID_FILE_TYPE);
-        }
-        
-        UserProfile userProfile = userProfileRepository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        
-        try {
-            byte[] avatarBytes = request.getAvatar().getBytes();
-            userProfile.setAvatar(avatarBytes);
-            userProfile = userProfileRepository.save(userProfile);
-            return userProfileMapper.toUserProfileResponse(userProfile);
-        } catch (IOException e) {
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
-    }
-    
-    public byte[] getAvatar(String userId) {
-        UserProfile userProfile = userProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-                
-        if (userProfile.getAvatar() == null) {
-            throw new AppException(ErrorCode.AVATAR_NOT_FOUND);
-        }
-        
-        return userProfile.getAvatar();
-    }
-    
-    private boolean isImageFile(MultipartFile file) {
-        String contentType = file.getContentType();
-        return contentType != null && contentType.startsWith("image/");
-    }
+    UserProfileRepository userProfileRepository;
 
-    private <T> void validate(T object) {
-        var violations = validator.validate(object);
-        if (!violations.isEmpty()) {
-            throw new AppException(ErrorCode.INVALID_REQUEST);
-        }
-    }
-
+    @Transactional
     public UserProfileResponse createUserProfile(UserProfileCreationRequest request) {
-        // Validate request
-        validate(request);
-        
-        // Check if user with the given userId already exists
-        if (userProfileRepository.findByUserId(request.getUserId()).isPresent()) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+        if (userProfileRepository.existsByAuthenId(request.getAuthenId())) {
+            log.warn("Attempt to create user profile with existing authenId: {}", request.getAuthenId());
+            throw new AppException(ErrorCode.USER_PROFILE_EXISTS);
         }
-        
-        UserProfile userProfile = userProfileMapper.toUserProfile(request);
-        userProfile = userProfileRepository.save(userProfile);
+        if (userProfileRepository.existsByUsername(request.getUsername())) {
+            log.warn("Attempt to create user profile with existing username: {}", request.getUsername());
+            throw new AppException(ErrorCode.DUPLICATE_USERNAME);
+        }
+        if (userProfileRepository.existsByEmail(request.getEmail())) {
+            log.warn("Attempt to create user profile with existing email: {}", request.getEmail());
+            throw new AppException(ErrorCode.DUPLICATE_EMAIL);
+        }
 
-        return userProfileMapper.toUserProfileResponse(userProfile);
+        UserProfile userProfile = UserProfile.builder()
+                .authenId(request.getAuthenId())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .username(request.getUsername())
+                .dob(request.getDob())
+                .phoneNumber(request.getPhoneNumber())
+                .location(request.getLocation())
+                .email(request.getEmail())
+                .build();
+
+        UserProfile savedUserProfile = userProfileRepository.save(userProfile);
+        log.info("User profile created successfully for authenId: {}", request.getAuthenId());
+        return toUserProfileResponse(savedUserProfile);
     }
 
-    public UserProfileResponse updateUserProfile(UserProfileUpdationRequest request) {
-        // Validate request
-        validate(request);
-        
-        UserProfile userProfile = userProfileRepository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        
-        // Map request values to existing userProfile
-        UserProfile updatedProfile = userProfileMapper.toUserProfile(request);
-        
-        // Update existing profile with new values
-        if (updatedProfile.getFirstName() != null) userProfile.setFirstName(updatedProfile.getFirstName());
-        if (updatedProfile.getLastName() != null) userProfile.setLastName(updatedProfile.getLastName());
-        if (updatedProfile.getUserName() != null) userProfile.setUserName(updatedProfile.getUserName());
-        if (updatedProfile.getDob() != null) userProfile.setDob(updatedProfile.getDob());
-        if (updatedProfile.getPhoneNumber() != null) userProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
-        if (updatedProfile.getLocation() != null) userProfile.setLocation(updatedProfile.getLocation());
-        if (updatedProfile.getEmail() != null) userProfile.setEmail(updatedProfile.getEmail());
-        
-        userProfile = userProfileRepository.save(userProfile);
+    @Transactional
+    public UserProfileResponse updateUserProfile(UserProfileUpdationRequest request, Jwt principal) {
+        String authenId = principal.getSubject();
 
-        return userProfileMapper.toUserProfileResponse(userProfile);
+        UserProfile userProfile = userProfileRepository.findByAuthenId(authenId)
+                .orElseThrow(() -> {
+                    log.error("User profile not found for authenId: {}", authenId);
+                    return new AppException(ErrorCode.USER_PROFILE_NOT_FOUND);
+                });
+
+        userProfile.setFirstName(request.getFirstName());
+        userProfile.setLastName(request.getLastName());
+        userProfile.setDob(request.getDob());
+        userProfile.setPhoneNumber(request.getPhoneNumber());
+        userProfile.setLocation(request.getLocation());
+
+        UserProfile updatedUserProfile = userProfileRepository.save(userProfile);
+        log.info("User profile updated successfully for authenId: {}", authenId);
+        return toUserProfileResponse(updatedUserProfile);
     }
 
-    public UserProfileResponse getUserProfile(String userId) {
-        UserProfile userProfile = userProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    public UserProfileResponse getMyProfile(Jwt principal) {
+        String authenId = principal.getSubject();
 
-        return userProfileMapper.toUserProfileResponse(userProfile);
+        UserProfile userProfile = userProfileRepository.findByAuthenId(authenId)
+                .orElseThrow(() -> {
+                    log.error("User profile not found for authenId: {}", authenId);
+                    return new AppException(ErrorCode.USER_PROFILE_NOT_FOUND);
+                });
+
+        log.info("Retrieved user profile for authenId: {}", authenId);
+        return toUserProfileResponse(userProfile);
     }
 
-    public UserProfileResponse getMyProfile() {
-        // Get current user from security context
-        String currentUserId = getCurrentUserId();
-        UserProfile userProfile = userProfileRepository.findByUserId(currentUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        return userProfileMapper.toUserProfileResponse(userProfile);
-    }
-
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
-
-    public List<UserProfileResponse> getAllUserProfile() {
-        List<UserProfile> userProfiles = userProfileRepository.findAll();
-        return userProfiles.stream()
-                .map(userProfileMapper::toUserProfileResponse)
-                .toList();
-    }
-    
-    public void followUser(String targetUserId) {
-        // Get current user from security context
-        String currentUserId = getCurrentUserId();
-        
-        UserProfile currentUserProfile = userProfileRepository.findByUserId(currentUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-                
-        UserProfile targetUserProfile = userProfileRepository.findByUserId(targetUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-                
-        // Using Neo4j specific repository to create relationship
-        // This would need a custom query method in the repository
-        userProfileRepository.createFollowRelationship(currentUserProfile.getId(), targetUserProfile.getId());
-    }
-    
-    public void unfollowUser(String targetUserId) {
-        // Get current user from security context
-        String currentUserId = getCurrentUserId();
-        
-        UserProfile currentUserProfile = userProfileRepository.findByUserId(currentUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-                
-        UserProfile targetUserProfile = userProfileRepository.findByUserId(targetUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        
-        // Using Neo4j specific repository to delete relationship
-        // This would need a custom query method in the repository
-        userProfileRepository.deleteFollowRelationship(currentUserProfile.getId(), targetUserProfile.getId());
+    private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
+        return UserProfileResponse.builder()
+                .authenId(userProfile.getAuthenId())
+                .firstName(userProfile.getFirstName())
+                .lastName(userProfile.getLastName())
+                .username(userProfile.getUsername())
+                .dob(userProfile.getDob())
+                .email(userProfile.getEmail())
+                .phoneNumber(userProfile.getPhoneNumber())
+                .location(userProfile.getLocation())
+                .build();
     }
 }

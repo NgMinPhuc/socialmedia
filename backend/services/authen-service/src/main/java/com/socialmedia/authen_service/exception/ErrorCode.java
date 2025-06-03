@@ -17,6 +17,7 @@ public enum ErrorCode {
     EMAIL_REQUIRED(400, "Email is required", HttpStatus.BAD_REQUEST),
     PASSWORD_REQUIRED(400, "Password is required", HttpStatus.BAD_REQUEST),
     PASSWORDS_DO_NOT_MATCH(400, "Passwords do not match", HttpStatus.BAD_REQUEST),
+    NEW_PASSWORD_SAME_AS_OLD(400, "New password cannot be the same as the old password", HttpStatus.BAD_REQUEST), // Added this
     EXPIRED_TOKEN(401, "The token has expired", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(401, "The token is invalid", HttpStatus.UNAUTHORIZED),
     ;

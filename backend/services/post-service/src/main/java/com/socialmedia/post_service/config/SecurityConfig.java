@@ -18,7 +18,8 @@ public class SecurityConfig {
     
     private static final String[] PUBLIC_ENDPOINTS = {
             "/feed/health",
-            "/actuator/**"
+            "/feed/posts/all",
+            "/feed/posts/{postId}"
     };
     
     @Bean

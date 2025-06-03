@@ -16,17 +16,9 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreatePostRequest {
-    @NotBlank(message = "User ID cannot be empty")
-    String userId;
-
     @Size(max = 1000, message = "Caption cannot exceed 1000 characters")
     String caption;
-
-    List<MultipartFile> files;
-
-    @Builder.Default
-    List<String> contentTypes = new ArrayList<>();
-
+    List<String> mediaUrls;
     @Builder.Default
     String privacy = "public"; // "public", "friends", "private"
 }

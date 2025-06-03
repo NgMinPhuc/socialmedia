@@ -11,13 +11,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChangePasswordRequest {
-
-    @NotBlank(message = "Old password cannot be blank")
     String oldPassword;
-
-    @NotBlank(message = "New password cannot be blank")
     String newPassword;
-
-    @NotBlank(message = "Confirm new password cannot be blank")
-    String confirmNewPassword;
 }

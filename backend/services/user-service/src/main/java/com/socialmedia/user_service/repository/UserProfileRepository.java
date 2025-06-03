@@ -11,27 +11,15 @@ import java.util.Optional;
 
 @Repository
 public interface UserProfileRepository extends Neo4jRepository<UserProfile, String> {
-    Optional<UserProfile> findByUserId(String userId);
-    
-    @Query("MATCH (a:`user profile`), (b:`user profile`) " +
-           "WHERE id(a) = $followerId AND id(b) = $followeeId " +
-           "CREATE (a)-[:FOLLOWS]->(b)")
-    void createFollowRelationship(@Param("followerId") String followerId, 
-                                 @Param("followeeId") String followeeId);
-    
-    @Query("MATCH (a:`user profile`)-[r:FOLLOWS]->(b:`user profile`) " +
-           "WHERE id(a) = $followerId AND id(b) = $followeeId " +
-           "DELETE r")
-    void deleteFollowRelationship(@Param("followerId") String followerId, 
-                                 @Param("followeeId") String followeeId);
-                                 
-    @Query("MATCH (a:`user profile`)-[:FOLLOWS]->(b:`user profile`) " +
-           "WHERE a.userId = $userId " +
-           "RETURN b")
-    List<UserProfile> findFollowing(@Param("userId") String userId);
-    
-    @Query("MATCH (a:`user profile`)<-[:FOLLOWS]-(b:`user profile`) " +
-           "WHERE a.userId = $userId " +
-           "RETURN b")
-    List<UserProfile> findFollowers(@Param("userId") String userId);
+    Optional<UserProfile> findByAuthenId(String authenId);
+
+    // Method to check if a user profile exists for a given userId
+    boolean existsByAuthenId(String authenId);
+
+    // Method to check if a user profile exists with a given username
+    boolean existsByUsername(String userName);
+
+    // Method to check if a user profile exists with a given email
+    boolean existsByEmail(String email);
+
 }

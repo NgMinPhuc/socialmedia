@@ -47,7 +47,6 @@ public class GlobalExceptionHandler {
 
         apiResponse.setCode(400);
         apiResponse.setMessage("Validation failed");
-        apiResponse.setErrors(exception.getErrors());
 
         return ResponseEntity.badRequest().body(apiResponse);
     }

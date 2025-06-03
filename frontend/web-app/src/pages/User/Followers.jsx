@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { userApi } from '@/services';
+import { userApi } from 'src/service';
 import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
 import Button from '@/ui/Button';
-import { DEFAULT_AVATAR } from '@/utils/constants';
 
 const FollowersPage = () => {
   const { username } = useParams();
@@ -31,7 +30,7 @@ const FollowersPage = () => {
           id: 1,
           fullName: 'John Doe',
           username: 'johndoe',
-          avatar: DEFAULT_AVATAR,
+          avatar: 'https://via.placeholder.com/40',
           bio: 'Software Developer',
           isFollowing: true
         },
@@ -39,7 +38,7 @@ const FollowersPage = () => {
           id: 2,
           fullName: 'Jane Smith',
           username: 'janesmith',
-          avatar: DEFAULT_AVATAR,
+          avatar: 'https://via.placeholder.com/40',
           bio: 'UI/UX Designer',
           isFollowing: false
         }

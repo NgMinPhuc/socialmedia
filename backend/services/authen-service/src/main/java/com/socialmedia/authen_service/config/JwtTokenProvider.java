@@ -43,8 +43,8 @@ public class JwtTokenProvider {
      */
     public String generateToken(User user) {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
-                .issuer("Now.com")
+                .subject(user.getAuthenId())
+                .issuer(user.getUsername())
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS)))
                 .jwtID(UUID.randomUUID().toString())

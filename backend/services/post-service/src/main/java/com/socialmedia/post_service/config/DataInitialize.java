@@ -1,9 +1,7 @@
 package com.socialmedia.post_service.config;
 
 import com.socialmedia.post_service.entity.Post;
-import com.socialmedia.post_service.entity.Comment;
 import com.socialmedia.post_service.repository.PostRepository;
-import com.socialmedia.post_service.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,22 +12,17 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-/**
- * Data initialization configuration for Post Service
- * Only runs on development and test profiles to populate sample data
- *
- * @author Social Media Platform Team
- * @version 1.0
- * @since 2024
- */
 @Configuration
-@Profile({"dev", "test"}) // Only run in development/test environments
+@Profile({"dev", "test"})
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitialize {
@@ -40,38 +33,78 @@ public class DataInitialize {
     @Value("${app.data.initialize:false}")
     private boolean initializeData;
 
-    /**
-     * Initializes sample data for development and testing purposes
-     * Skips initialization if data already exists or if explicitly disabled
-     */
+    private static final int NUMBER_OF_USERS = 50;
+    private static final int POSTS_PER_USER = 20;
+    private static final int MAX_DAYS_AGO = 365 * 2; // Tối đa 2 năm trước
+
+    private static final List<String> IMAGE_URLS = Arrays.asList(
+            "https://images.unsplash.com/photo-1555066931-4365d14bab8c",
+            "https://images.unsplash.com/photo-1593720213428-28a5b9e94613",
+            "https://images.unsplash.com/photo-1591453089816-0fbb971b454c",
+            "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
+            "https://images.unsplash.com/photo-1506619216599-9d16d0903dfd",
+            "https://images.unsplash.com/photo-1512100356356-de1b84283e18",
+            "https://images.unsplash.com/photo-1561121668-bc4096c1d9fc",
+            "https://images.unsplash.com/photo-1505327260515-0810795c645b",
+            "https://images.unsplash.com/photo-1533174072545-ea663c22066d",
+            "https://images.unsplash.com/photo-1517457210940-ed21ee5c3917",
+            "https://images.unsplash.com/photo-1505740420928-5e560c06f353",
+            "https://images.unsplash.com/photo-1542831371-29b0f74f9d8b",
+            "https://images.unsplash.com/photo-1518779578619-33866d34e262",
+            "https://images.unsplash.com/photo-1510915228387-abf336fe146b",
+            "https://images.unsplash.com/photo-1494883903106-a6e54625b50f"
+    );
+
+    private static final String[] CAPTIONS = {
+            "Just finished implementing a new microservice architecture! #tech #coding",
+            "Exploring the latest features in Spring Boot. Amazing performance improvements! #springboot #java",
+            "Working on a new AI project. Machine learning is fascinating! #ai #ml #tech",
+            "Best coffee shop in town! Their cold brew is amazing ☕ #coffee #coffeelover",
+            "Morning coffee ritual ☕ #coffee #morning",
+            "Beautiful sunset in Bali 🌅 #travel #bali #sunset",
+            "New digital art piece! #art #digitalart #creative",
+            "Enjoying the tranquility of nature. So peaceful! 🌿 #nature #peace",
+            "Had an amazing time at the party last night! 🎉 #friends #party",
+            "Conquering new heights! What an incredible view! ⛰️ #hiking #adventure",
+            "Coding late night. The bugs are strong with this one! #developerlife",
+            "Weekend vibes. Time to relax and recharge. ☀️ #weekend #chill",
+            "Learning something new every day is key to growth. #lifelonglearning",
+            "Food coma after that delicious meal! 🍜 #foodie #yummy",
+            "A little progress each day adds up to big results. Keep going! #motivation",
+            "Exploring new cities is always an adventure. What's your favorite travel destination?",
+            "Reading a good book and enjoying a quiet afternoon. 📚 #books #relax",
+            "Fitness journey continues! Small steps lead to big changes. 💪 #fitness #health",
+            "Loving the new update to my favorite app. So much smoother!",
+            "Brainstorming new ideas. Innovation never stops! 💡 #innovation #ideas"
+    };
+
+    private static final String[] PRIVACY_OPTIONS = {"PUBLIC", "FRIENDS", "PRIVATE"};
+
     @Bean
-    CommandLineRunner initializeDatabase(PostRepository postRepository, CommentRepository commentRepository) {
+    CommandLineRunner initializeDatabase() {
         return args -> {
             if (!initializeData) {
-                log.info("Data initialization is disabled by configuration");
+                log.info("Data initialization is disabled by configuration. Set 'app.data.initialize=true' to enable.");
                 return;
             }
 
-            // Skip initialization if data already exists to avoid conflicts
-            if (postRepository.count() > 0) {
-                log.info("Post data already exists, skipping initialization...");
+            if (postRepository.count() > 0) { // Giữ nguyên cách kiểm tra tồn tại dữ liệu của bạn
+                log.info("Post data already exists ({} posts found), skipping initialization.", postRepository.count());
                 return;
             }
 
             log.info("Starting data initialization for Post Service...");
+            long startTime = System.currentTimeMillis();
 
             try {
-                // Clean existing data
                 mongoTemplate.dropCollection(Post.class);
-                mongoTemplate.dropCollection(Comment.class);
+                log.info("Dropped 'posts' collection.");
 
-                // Initialize sample posts
-                initializeSamplePosts(postRepository);
+                initializeSamplePosts();
 
-                // Initialize sample comments
-                initializeSampleComments(commentRepository, postRepository);
-
-                log.info("Data initialization completed successfully");
+                long endTime = System.currentTimeMillis();
+                log.info("Data initialization completed successfully. Total posts: {}. Time taken: {} ms",
+                        postRepository.count(), (endTime - startTime));
 
             } catch (Exception e) {
                 log.error("Error during data initialization: {}", e.getMessage(), e);
@@ -80,196 +113,60 @@ public class DataInitialize {
         };
     }
 
-    /**
-     * Creates sample posts for testing purposes
-     */
-    private void initializeSamplePosts(PostRepository postRepository) {
-        List<Post> samplePosts = createSamplePosts();
-        postRepository.saveAll(samplePosts);
-        log.info("Initialized {} sample posts", samplePosts.size());
-    }
+    private void initializeSamplePosts() {
+        List<String> generatedAuthenIds = generateUniqueAuthenIds(NUMBER_OF_USERS); // Đổi tên biến cho rõ ràng
+        List<Post> allPosts = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
 
-    /**
-     * Creates sample comments for testing purposes
-     */
-    private void initializeSampleComments(CommentRepository commentRepository, PostRepository postRepository) {
-        List<Comment> sampleComments = createSampleComments();
-        commentRepository.saveAll(sampleComments);
+        // Create posts for each user
+        for (String authenId : generatedAuthenIds) { // Đổi tên biến cho rõ ràng
+            for (int i = 0; i < POSTS_PER_USER; i++) {
+                // Random time creation
+                long randomDaysAgo = ThreadLocalRandom.current().nextLong(MAX_DAYS_AGO + 1); // +1 để bao gồm 0
+                long randomHoursAgo = ThreadLocalRandom.current().nextLong(24);
+                long randomMinutesAgo = ThreadLocalRandom.current().nextLong(60);
+                long randomSecondsAgo = ThreadLocalRandom.current().nextLong(60);
 
-        // Update comment counts
-        updatePostCommentCounts(postRepository, sampleComments);
+                LocalDateTime createdAt = now.minusDays(randomDaysAgo)
+                        .minusHours(randomHoursAgo)
+                        .minusMinutes(randomMinutesAgo)
+                        .minusSeconds(randomSecondsAgo);
+                LocalDateTime updatedAt = createdAt;
 
-        log.info("Initialized {} sample comments", sampleComments.size());
-    }
+                String caption = getRandomElement(CAPTIONS);
+                String mediaUrl = getRandomElement(IMAGE_URLS) + "?auto=format&fit=crop&q=80&w=600&h=400";
+                String privacy = getRandomElement(PRIVACY_OPTIONS);
 
-    /**
-     * Creates a list of sample posts with various content types
-     */
-    private List<Post> createSamplePosts() {
-        List<Post> alicePosts = Arrays.asList(
-                // Tech posts
-                Post.builder()
-                    .postId("1")
-                    .userId("550e8400-e29b-41d4-a716-446655440001") // Alice's ID from authen-service
-                    .caption("Just finished implementing a new microservice architecture! #tech #coding")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build(),
+                int likes = ThreadLocalRandom.current().nextInt(0, 5000);
+                int comments = ThreadLocalRandom.current().nextInt(0, 500);
 
-                Post.builder()
-                    .postId("2")
-                    .userId("550e8400-e29b-41d4-a716-446655440001")
-                    .caption("Exploring the latest features in Spring Boot 3.4. Amazing performance improvements! #springboot #java")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build(),
-
-                Post.builder()
-                    .postId("3")
-                    .userId("550e8400-e29b-41d4-a716-446655440001")
-                    .caption("Working on a new AI project. Machine learning is fascinating! #ai #ml #tech")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1591453089816-0fbb971b454c?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build(),
-
-                // Coffee posts
-                Post.builder()
-                    .postId("4")
-                    .userId("550e8400-e29b-41d4-a716-446655440001")
-                    .caption("Best coffee shop in town! Their cold brew is amazing ☕ #coffee #coffeelover")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build(),
-
-                Post.builder()
-                    .postId("5")
-                    .userId("550e8400-e29b-41d4-a716-446655440001")
-                    .caption("Morning coffee ritual ☕ #coffee #morning")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build(),
-
-                // Travel posts
-                Post.builder()
-                    .postId("6")
-                    .userId("550e8400-e29b-41d4-a716-446655440001")
-                    .caption("Beautiful sunset in Bali 🌅 #travel #bali #sunset")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1512100356356-de1b84283e18?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build()
-
-            );
-
-            // Create posts for other users
-            List<Post> otherPosts = Arrays.asList(
-                Post.builder()
-                    .postId("16")
-                    .userId("550e8400-e29b-41d4-a716-446655440002") // Bob's ID
-                    .caption("New digital art piece! #art #digitalart")
-                    .files(Arrays.asList("https://images.unsplash.com/photo-1561121668-bc4096c1d9fc?w=800&h=600&fit=crop"))
-                    .contentTypes(Arrays.asList("text", "image"))
-                    .privacy("public")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .likesCount(0)
-                    .commentsCount(0)
-                    .build()
-
-
-            );
-
-            // Lưu tất cả posts
-            postRepository.saveAll(alicePosts);
-            postRepository.saveAll(otherPosts);
-
-            List<Post> allPosts = new ArrayList<>();
-            allPosts.addAll(alicePosts);
-            allPosts.addAll(otherPosts);
-            return allPosts;
+                allPosts.add(Post.builder()
+                        .authenId(authenId) // Sử dụng authenId
+                        .caption(caption)
+                        .mediaUrls(Collections.singletonList(mediaUrl))
+                        .privacy(privacy)
+                        .createdAt(createdAt)
+                        .updatedAt(updatedAt)
+                        .likesCount(likes)
+                        .commentsCount(comments)
+                        .build());
+            }
         }
 
-    /**
-     * Creates sample comments for posts
-     */
-    private List<Comment> createSampleComments() {
-        Post post1 = Post.builder()
-            .postId("1")
-            .build();
-
-        List<Comment> comments = new ArrayList<>();
-
-        // Create a comment from Bob on Alice's post
-        Comment comment1 = Comment.builder()
-            .commentId("1")
-            .post(post1)
-            .userId("550e8400-e29b-41d4-a716-446655440002") // Bob's ID
-            .content("Great work! The architecture looks solid.")
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
-
-        comments.add(comment1);
-
-        // Add more comments as needed
-        return comments;
+        postRepository.saveAll(allPosts);
     }
 
-    /**
-     * Updates post comment counts based on comments
-     */
-    private void updatePostCommentCounts(PostRepository postRepository, List<Comment> comments) {
-        // Group comments by post
-        Map<String, Long> commentCounts = comments.stream()
-            .collect(Collectors.groupingBy(
-                comment -> comment.getPost().getPostId(),
-                Collectors.counting()
-            ));
+    private List<String> generateUniqueAuthenIds(int count) { // Đổi tên phương thức cho rõ ràng
+        return IntStream.range(0, count)
+                .mapToObj(i -> UUID.randomUUID().toString())
+                .collect(Collectors.toList());
+    }
 
-        // Update each post with the comment count
-        commentCounts.forEach((postId, count) -> {
-            Post post = postRepository.findById(postId).orElse(null);
-            if (post != null) {
-                post.setCommentsCount(count.intValue());
+    private <T> T getRandomElement(T[] array) {
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
+    }
 
-                // Update the list of comment IDs
-                List<String> commentIds = comments.stream()
-                    .filter(comment -> comment.getPost().getPostId().equals(postId))
-                    .map(Comment::getCommentId)
-                    .collect(Collectors.toList());
-
-                post.setListCommentId(commentIds);
-                postRepository.save(post);
-            }
-        });
+    private <T> T getRandomElement(List<T> list) {
+        return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 }

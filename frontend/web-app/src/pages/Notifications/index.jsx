@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { notificationApi } from '@/services';
+import { notificationApi } from 'src/service';
 import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';

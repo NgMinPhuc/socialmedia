@@ -19,20 +19,16 @@ import java.util.List;
 public class Post {
 
     @Id
-    String postId;
-    String userId;
+    String id;
+    String authenId;
     String caption;
     @Builder.Default
-    List<String> files = new ArrayList<>(); // Changed to String URLs
-    @Builder.Default
-    List<String> contentTypes = new ArrayList<>();
+    List<String> mediaUrls = new ArrayList<>();
     @Builder.Default
     Integer likesCount = 0;
     @Builder.Default
     Integer commentsCount = 0;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    String privacy; // "public", "friends", "private"
-    @Builder.Default
-    List<String> listCommentId = new ArrayList<>();
+    String privacy;
 }

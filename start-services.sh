@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Social Media Application Service Startup Script
-# This script starts all microservices in the correct order with health checks
+# This script starts selected microservices in the correct order with health checks
 
 echo "🚀 Starting Social Media Application Services..."
 
@@ -13,106 +13,142 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Base directory
-BASE_DIR="/Users/blake/Desktop/socialmedia/backend"
+# Base directory - using relative path
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$BASE_DIR/backend"
+FRONTEND_DIR="$BASE_DIR/frontend/web-app"
+LOGS_DIR="$BASE_DIR/logs"
 
-# Service definitions
-declare -A SERVICES=(
-    ["eureka-server"]="8761:Eureka Server:infrastructure/eureka-server"
-    ["auth-service"]="8081:Auth Service:services/authen-service"
-    ["user-service"]="8082:User Service:services/user-service"
-    ["post-service"]="8083:Post Service:services/post-service"
-    ["chat-service"]="8084:Chat Service:services/chat-service"
-    ["search-service"]="8085:Search Service:services/search-service"
-    ["notification-service"]="8086:Notification Service:services/notification-service"
-    ["api-gateway"]="8080:API Gateway:infrastructure/api-gateway-service"
-)
+# Ensure logs directory exists
+mkdir -p "$LOGS_DIR"
+
+# Function to check if a port is in use (service is listening)
+wait_for_port() {
+    local port=$1
+    local service_name=$2
+    local timeout=180 # seconds
+    local start_time=$(date +%s)
+
+    echo -e "${YELLOW}⏳ Waiting for $service_name to start on port $port...${NC}"
+    while ! nc -z localhost "$port" >/dev/null 2>&1; do
+        current_time=$(date +%s)
+        elapsed=$((current_time - start_time))
+        if [ "$elapsed" -ge "$timeout" ]; then
+            echo -e "${RED}❌ $service_name did not start within $timeout seconds. Exiting.${NC}"
+            exit 1
+        fi
+        echo -n "."
+        sleep 2
+    done
+    echo ""
+    echo -e "${GREEN}✅ $service_name is listening on port $port.${NC}"
+}
 
 # Function to start a Spring Boot service
 start_spring_service() {
-    local service_name=$1
-    local service_path=$2
-    local port=$3
-    
+    local service_id=$1
+    local service_name=$2
+    local service_path=$3
+    local port=$4
+
     echo -e "${BLUE}🔄 Starting $service_name on port $port...${NC}"
-    
-    cd "$BASE_DIR/$service_path"
-    
-    # Start service in background
-    nohup ./mvnw spring-boot:run > "../../../logs/${service_name}.log" 2>&1 &
+
+    cd "$BACKEND_DIR/$service_path" || { echo -e "${RED}❌ Error: Directory $BACKEND_DIR/$service_path not found.${NC}"; exit 1; }
+
+    # Start service in background, redirecting output to a specific log file
+    nohup ./mvnw spring-boot:run > "$LOGS_DIR/${service_id}.log" 2>&1 &
     local pid=$!
-    echo $pid > "../../../logs/${service_name}.pid"
-    
+    echo "$pid" > "$LOGS_DIR/${service_id}.pid" # Save PID for later stopping
+
     echo -e "${GREEN}✅ $service_name started (PID: $pid)${NC}"
-    
-    # Wait a bit before starting next service
-    sleep 10
 }
 
-# Function to start Go service (Chat Service)
-start_go_service() {
-    echo -e "${BLUE}🔄 Starting Chat Service on port 8084...${NC}"
-    
-    cd "$BASE_DIR/services/chat-service"
-    
-    # Start service in background
-    nohup go run cmd/main.go > "../../../logs/chat-service.log" 2>&1 &
+# Function to start Frontend service
+start_frontend() {
+    echo -e "${BLUE}🔄 Starting Frontend service...${NC}"
+
+    cd "$FRONTEND_DIR" || { echo -e "${RED}❌ Error: Directory $FRONTEND_DIR not found.${NC}"; exit 1; }
+
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        echo -e "${YELLOW}📦 Installing frontend dependencies...${NC}"
+        npm install || { echo -e "${RED}❌ Error: npm install failed for frontend.${NC}"; exit 1; }
+    fi
+
+    # Start frontend in background
+    nohup npm run dev > "$LOGS_DIR/frontend.log" 2>&1 &
     local pid=$!
-    echo $pid > "../../../logs/chat-service.pid"
-    
-    echo -e "${GREEN}✅ Chat Service started (PID: $pid)${NC}"
-    sleep 5
-}
+    echo "$pid" > "$LOGS_DIR/frontend.pid"
 
-# Create logs directory
-mkdir -p /Users/blake/Desktop/socialmedia/logs
+    echo -e "${GREEN}✅ Frontend service started (PID: $pid)${NC}"
+}
 
 echo "📋 Starting services in optimal order..."
 echo ""
 
-# 1. Start Eureka Server (Service Discovery)
-start_spring_service "Eureka Server" "infrastructure/eureka-server" 8761
+# --- PHASE 1: Start Eureka Server (Critical First) ---
+start_spring_service "eureka-server" "Eureka Server" "infrastructure/eureka-server" 8761
+wait_for_port 8761 "Eureka Server"
 
-# Wait for Eureka to be fully ready
-echo "⏳ Waiting for Eureka Server to be ready..."
-sleep 15
+# --- PHASE 2: Start User Service (Next Critical, often depends on Eureka) ---
+start_spring_service "user-service" "User Service" "services/user-service" 8082
+wait_for_port 8082 "User Service"
 
-# 2. Start Auth Service (Authentication)
-start_spring_service "Auth Service" "services/authen-service" 8081
+# --- PHASE 3: Start Remaining Backend Services in Parallel ---
+echo -e "${BLUE}🚀 Starting Authentication, Notification, and API Gateway services in parallel...${NC}"
 
-# 3. Start User Service (User Management)
-start_spring_service "User Service" "services/user-service" 8082
+# Start Auth Service in background
+start_spring_service "auth-service" "Auth Service" "services/authen-service" 8081 &
+AUTH_PID=$!
 
-# 4. Start Post Service (Post Management)
-start_spring_service "Post Service" "services/post-service" 8083
+# Start Post Service in background
+start_spring_service "post-service" "Post Service" "services/post-service" 8083 &
+POST_PID=$!
 
-# 5. Start Chat Service (Real-time Messaging)
-start_go_service
+# Start Notification Service in background
+start_spring_service "notification-service" "Notification Service" "services/notification-service" 8086 &
+NOTIFICATION_PID=$!
 
-# 6. Start Search Service (Search & Discovery)
-start_spring_service "Search Service" "services/search-service" 8085
+# Start API Gateway in background (can typically start before other services fully register,
+# as it will discover them via Eureka)
+start_spring_service "api-gateway" "API Gateway" "infrastructure/api-gateway-service" 8080 &
+API_GATEWAY_PID=$!
 
-# 7. Start Notification Service (Notifications)
-start_spring_service "Notification Service" "services/notification-service" 8086
+# Wait for all parallel backend services to start listening on their ports
+wait_for_port 8081 "Auth Service" &
+WAIT_AUTH_PID=$!
 
-# 8. Start API Gateway (Last to ensure all services are registered)
-echo "⏳ Waiting for all services to register with Eureka..."
-sleep 20
-start_spring_service "API Gateway" "infrastructure/api-gateway-service" 8080
+# Wait for Post Service in background
+wait_for_port 8083 "Post Service" &
+WAIT_POST_PID=$!
+
+wait_for_port 8086 "Notification Service" &
+WAIT_NOTIFICATION_PID=$!
+
+wait_for_port 8080 "API Gateway" &
+WAIT_API_GATEWAY_PID=$!
+
+# Wait for all background wait_for_port processes to complete
+wait $WAIT_AUTH_PID $WAIT_POST_PID $WAIT_NOTIFICATION_PID $WAIT_API_GATEWAY_PID
+
+echo -e "${GREEN}✅ All critical backend services are up and running.${NC}"
+
+# --- PHASE 4: Start Frontend Service ---
+start_frontend
 
 echo ""
 echo -e "${GREEN}🎉 All services started successfully!${NC}"
 echo ""
 echo "📋 Service URLs:"
+echo "   🌐 Frontend: http://localhost:3000"
 echo "   🌐 API Gateway: http://localhost:8080"
 echo "   🔐 Auth Service: http://localhost:8081"
 echo "   👤 User Service: http://localhost:8082"
 echo "   📝 Post Service: http://localhost:8083"
-echo "   💬 Chat Service: http://localhost:8084"
-echo "   🔍 Search Service: http://localhost:8085"
+echo "   🔍 Search Service: http://localhost:8084"
 echo "   🔔 Notification Service: http://localhost:8086"
 echo "   🗂️  Eureka Dashboard: http://localhost:8761"
 echo ""
-echo "📁 Logs are available in: /Users/blake/Desktop/socialmedia/logs/"
+echo "📁 Logs are available in: $LOGS_DIR/"
 echo ""
-echo "🛑 To stop all services, run: ./stop-services.sh"
+echo "🛑 To stop all services, run: ./force-stop.sh"

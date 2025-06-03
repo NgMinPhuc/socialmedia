@@ -17,7 +17,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="id")
-    String userId;
+    String authenId;
 
     @Column(name="username", nullable = false)
     String username;
@@ -27,30 +27,4 @@ public class User {
 
     @Column(name="email")
     String email;
-    
-    @Column(name="active")
-    Boolean active = true;
-    
-    @Column(name="created_at")
-    LocalDateTime createdAt;
-    
-    @Column(name="updated_at")
-    LocalDateTime updatedAt;
-    
-    @Column(name="last_login")
-    LocalDateTime lastLogin;
-    
-    @Column(name="failed_attempts")
-    Integer failedAttempts = 0;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

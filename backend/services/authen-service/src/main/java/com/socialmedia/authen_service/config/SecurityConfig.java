@@ -15,20 +15,19 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse; // Đảm bảo import này đúng cho Spring Boot 3+
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-        @Value("${jwt.signerKey}")
-        private String SIGNER_KEY;
+    @Value("${jwt.signerKey}")
+    private String SIGNER_KEY;
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/login",
             "/auth/register",
             "/auth/validateToken",
-            "/auth/health"
     };
 
     @Bean
@@ -45,12 +44,17 @@ public class SecurityConfig {
                     .authenticated();
         });
 
-
         http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer ->
                         jwtConfigurer
                                 .decoder(jwtDecoder())
-        ));
+                ));
+
+        http.exceptionHandling(exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint((request, response, authException) ->
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage())
+                )
+        );
 
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -71,5 +75,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
-
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { searchApi } from '@/services';
+import { searchApi } from 'src/service';
 import Post from '@/components/Post';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
@@ -34,19 +34,13 @@ const SearchPage = () => {
     try {
       if (activeTab === 'users') {
         setUsersLoading(true);
-        const response = await searchApi.search({
-          query: searchQuery,
-          type: 'users'
-        });
-        setUsers(response.users || response.data?.users || []);
+        const response = await searchApi.searchUsers(searchQuery);
+        setUsers(response.data || response);
         setUsersLoading(false);
       } else {
         setPostsLoading(true);
-        const response = await searchApi.search({
-          query: searchQuery,
-          type: 'posts'
-        });
-        setPosts(response.posts || response.data?.posts || []);
+        const response = await searchApi.searchPosts(searchQuery);
+        setPosts(response.data || response);
         setPostsLoading(false);
       }
     } catch (error) {

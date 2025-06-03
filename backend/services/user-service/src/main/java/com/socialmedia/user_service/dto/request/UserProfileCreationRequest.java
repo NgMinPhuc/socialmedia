@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserProfileCreationRequest {
     @NotBlank(message = "User ID is required")
-    String userId;
+    String authenId;
     
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     String firstName;
@@ -24,7 +24,7 @@ public class UserProfileCreationRequest {
     
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
-    String userName;
+    String username;
     
     @Past(message = "Date of birth must be in the past")
     LocalDate dob;

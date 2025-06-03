@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { chatService } from '@/services';
+import { chatService } from 'src/service';
 import { useAuth } from '@/contexts/AuthContext';
 import Loading from '@/components/Loading';
 import Avatar from '@/ui/Avatar';
@@ -31,8 +31,8 @@ const MessagesPage = () => {
   }, [messages]);
 
   const initializeWebSocket = () => {
-    if (user) {
-      chatService.connect(user); // user is now just the username string
+    if (user?.id) {
+      chatService.connect(user.id);
       
       chatService.onMessage((message) => {
         if (selectedConversation && 

@@ -12,7 +12,22 @@ const MainLayout = () => {
     return <Loading />;
   }
   
-  // Redirect to login if not authenticated
+  // In development, always allow access
+  if (process.env.NODE_ENV === 'development') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-4">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    );
+  }
+  
+  // In production, check authentication
   if (!user) {
     return <Navigate to="/auth/login" replace />;
   }

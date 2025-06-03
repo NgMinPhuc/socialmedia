@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserProfileUpdationRequest {
     String profileId;
-    String userId;
+    String authenId;
     String firstName;
     String lastName;
     String userName;
