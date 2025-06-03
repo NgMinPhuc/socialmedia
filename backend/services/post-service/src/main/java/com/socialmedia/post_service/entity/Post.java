@@ -19,7 +19,7 @@ import java.util.List;
 public class Post {
 
     @Id
-    String id;
+    String postId;
     String authenId;
     String caption;
     @Builder.Default

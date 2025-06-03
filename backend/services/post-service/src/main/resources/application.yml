@@ -8,45 +8,40 @@ spring:
     name: post-service
   data:
     mongodb:
-      # Kết nối đến MongoDB. Đảm bảo username và password khớp với cài đặt Docker của bạn.
-      # postDB là tên database mà service này sẽ sử dụng.
       uri: mongodb://root:rootpassword@localhost:27017/postDB?authSource=admin
-      auto-index-creation: true # Tự động tạo index khi khởi động ứng dụng (hữu ích cho phát triển)
+      auto-index-creation: true
     redis:
       host: localhost
       port: 6379
   cache:
-    type: redis # Kích hoạt Redis làm cache provider
+    type: redis
 
 app:
-  # Cấu hình URL của các microservice khác mà Post Service có thể cần gọi
   auth-service:
     url: http://localhost:8081
   user-service:
     url: http://localhost:8082
   notification-service:
     url: http://localhost:8084
+  data:
+    # Đặt giá trị này là 'true' để kích hoạt khởi tạo dữ liệu khi ứng dụng chạy với profile 'dev' hoặc 'test'.
+    initialize: true
 
 eureka:
   client:
-    # URL của Eureka Server để Post Service đăng ký và khám phá các dịch vụ khác
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
-    # Ưu tiên sử dụng địa chỉ IP khi đăng ký với Eureka (hữu ích trong môi trường Docker)
     preferIpAddress: true
 
 security:
   oauth2:
     resourceserver:
       jwt:
-        # Issuer URI của Auth Service, nơi phát hành JWT
         issuer-uri: http://localhost:8081
-        # JWK Set URI để Post Service lấy public key xác thực JWT
         jwk-set-uri: http://localhost:8081/.well-known/jwks.json
 
 logging:
   level:
-    # Cấu hình mức độ log cho các package cụ thể
-    org.springframework.data.mongodb: INFO # Log thông tin về Spring Data MongoDB
-    com.socialmedia.postservice: DEBUG # Log chi tiết hơn cho package của Post Service
+    org.springframework.data.mongodb: INFO
+    com.socialmedia.postservice: DEBUG

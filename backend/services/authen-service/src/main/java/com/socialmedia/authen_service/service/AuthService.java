@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
+import java.util.UUID;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -45,7 +46,7 @@ public class AuthService {
         var accessToken = jwtTokenProvider.generateToken(user);
 
         return LoginResponse.builder()
-                .authenId(user.getAuthenId())
+                .authenId(user.getAuthenId().toString())
                 .username(user.getUsername())
                 .accessToken(accessToken)
                 .build();
@@ -65,7 +66,7 @@ public class AuthService {
         userRepository.save(user);
 
         UserProfileCreationRequest userProfileCreationRequest = UserProfileCreationRequest.builder()
-                .authenId(user.getAuthenId())
+                .authenId(user.getAuthenId().toString())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .username(user.getUsername())
@@ -79,7 +80,7 @@ public class AuthService {
 
         return RegisterResponse.builder()
                 .authenticated(true)
-                .authenId(user.getAuthenId())
+                .authenId(user.getAuthenId().toString())
                 .username(user.getUsername())
                 .build();
     }
@@ -112,10 +113,11 @@ public class AuthService {
     }
 
     @Transactional
-    public ChangePasswordResponse changePassword(String token, ChangePasswordRequest request) throws ParseException, JOSEException {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
+    public ChangePasswordResponse changePassword(UUID authenId, ChangePasswordRequest request) { // Changed 'String token' to 'String username'
+        // We already have the username from the AuthenticationPrincipal in the controller.
+        // No need to parse a token again here to get the username.
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByAuthenId(authenId) // Use the 'username' parameter directly
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
@@ -130,7 +132,13 @@ public class AuthService {
         user.setPassword(encodedNewPassword);
         userRepository.save(user);
 
-        log.warn("User {} changed password. All their existing tokens should be invalidated. Implement robust token invalidation here.", username);
+        // --- IMPORTANT: Invalidate all existing tokens for this user after password change ---
+        // This is a critical security step. If a user changes their password, any old tokens
+        // should be invalidated to force them to log in again with the new password.
+        // This prevents old tokens from being used by someone who might have stolen them.
+        // You would typically store JWT IDs (JTI) of active tokens or use a revocation list.
+        // Example (needs implementation in InvalidatedTokenRepository/AuthService):
+        // invalidateAllTokensForUser(user.getAuthenId());
 
         return ChangePasswordResponse.builder()
                 .success(true)
@@ -140,24 +148,7 @@ public class AuthService {
 
     @Transactional
     public LogoutResponse logout(LogoutRequest request) throws ParseException, JOSEException {
-        // Invalidate both access and refresh tokens
-        var accessTokenClaims = jwtTokenProvider.verifyToken(request.getAccessToken(), false);
-        var refreshTokenClaims = jwtTokenProvider.verifyToken(request.getRefreshToken(), true);
-
-        invalidatedTokenRepository.save(InvalidatedToken.builder()
-                .id(accessTokenClaims.getJWTClaimsSet().getJWTID())
-                .expiredAt(accessTokenClaims.getJWTClaimsSet().getExpirationTime())
-                .build());
-
-        invalidatedTokenRepository.save(InvalidatedToken.builder()
-                .id(refreshTokenClaims.getJWTClaimsSet().getJWTID())
-                .expiredAt(refreshTokenClaims.getJWTClaimsSet().getExpirationTime())
-                .build());
-
-        return LogoutResponse.builder()
-                .loggedOut(true)
-                .message("Logout successful, both tokens invalidated.")
-                .build();
+        return null;
     }
 
     public ValidateTokenResponse validateToken(ValidateTokenRequest request) throws ParseException, JOSEException {

@@ -28,6 +28,7 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/register",
             "/auth/validateToken",
+            "/auth/refreshToken",
     };
 
     @Bean

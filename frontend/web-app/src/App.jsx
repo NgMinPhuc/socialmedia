@@ -31,7 +31,6 @@ function App() {
           </Route>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            {/* <Route path="explore" element={<ExplorePage />} /> */}
             <Route path="myposts" element={<MyPostsPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/:userId" element={<ProfilePage />} />

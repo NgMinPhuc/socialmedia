@@ -43,7 +43,7 @@ public class JwtTokenProvider {
      */
     public String generateToken(User user) {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .subject(user.getAuthenId())
+                .subject(user.getAuthenId().toString())
                 .issuer(user.getUsername())
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS)))
@@ -92,8 +92,29 @@ public class JwtTokenProvider {
         SignedJWT signedJWT = verifyToken(token, false);
         JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
-        return claimsSet.getSubject();
+        String username = claimsSet.getIssuer(); // Sửa từ getSubject() sang getIssuer()
+        if (username == null || username.trim().isEmpty()) {
+            // Trường hợp không tìm thấy username trong claim 'issuer'
+            log.warn("Username (issuer claim) not found or empty in token: {}", token);
+            throw new AppException(ErrorCode.INVALID_TOKEN); // Hoặc một lỗi phù hợp hơn
+        }
+        return username;
     }
 
+    public UUID getUserIdFromToken(String token) throws ParseException, JOSEException {
+        SignedJWT signedJWT = verifyToken(token, false); // Mặc định là Access Token
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
+        String subject = claimsSet.getSubject(); // Lấy từ subject claim
+        if (subject == null || subject.trim().isEmpty()) {
+            log.warn("Subject claim (user ID) not found or empty in token: {}", token);
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+        try {
+            return UUID.fromString(subject);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid UUID format for subject in token: {}", subject, e);
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+    }
 }

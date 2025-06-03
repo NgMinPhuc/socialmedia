@@ -30,8 +30,7 @@ public class PostController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PostResponse> createPost(
-            @RequestBody @Valid CreatePostRequest request,
-            @AuthenticationPrincipal Jwt principal
+            @AuthenticationPrincipal Jwt principal, @RequestBody @Valid CreatePostRequest request
     ) {
         String authenId = principal.getSubject();
         return ApiResponse.<PostResponse>builder()
@@ -43,14 +42,13 @@ public class PostController {
 
     @PutMapping("/update/{postId}")
     public ApiResponse<PostResponse> updatePost(
-            @RequestBody @Valid UpdatePostRequest request,
-            @AuthenticationPrincipal Jwt principal
+            @AuthenticationPrincipal Jwt principal, @RequestBody @Valid UpdatePostRequest request
     ) {
-        String userId = principal.getSubject();
+        String authenId = principal.getSubject();
         return ApiResponse.<PostResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Post updated successfully")
-                .result(postService.updatePost(userId, request))
+                .result(postService.updatePost(authenId, request))
                 .build();
     }
 
@@ -86,8 +84,8 @@ public class PostController {
 
     @DeleteMapping("/delete/{postId}")
     public ApiResponse<PostDeleteResponse> deletePost(
-            @RequestBody @Valid GetPostByPostIdRequest request,
-            @AuthenticationPrincipal Jwt principal
+            @AuthenticationPrincipal Jwt principal,
+            @RequestBody @Valid GetPostByPostIdRequest request
     ) {
         String authenId = principal.getSubject();
         return ApiResponse.<PostDeleteResponse>builder()

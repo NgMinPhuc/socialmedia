@@ -34,7 +34,7 @@ public class PostService {
 
     private PostResponse toPostResponse(Post post) {
         return PostResponse.builder()
-                .id(post.getId())
+                .postId(post.getPostId())
                 .authenId(post.getAuthenId())
                 .caption(post.getCaption())
                 .mediaUrls(post.getMediaUrls())
@@ -77,7 +77,7 @@ public class PostService {
                 .build();
 
         Post savedPost = postRepository.save(newPost);
-        log.info("Post created successfully with ID: {} for authenId: {}", savedPost.getId(), authenId);
+        log.info("Post created successfully with ID: {} for authenId: {}", savedPost.getPostId(), authenId);
         return toPostResponse(savedPost);
     }
 
@@ -86,7 +86,7 @@ public class PostService {
         String postId = request.getPostId();
         log.info("Request to update post with ID: {} by authenId: {}", postId, authenId);
 
-        Post existingPost = postRepository.findByIdAndAuthenId(postId, authenId)
+        Post existingPost = postRepository.findByPostIdAndAuthenId(postId, authenId)
                 .orElseThrow(() -> {
                     log.warn("Post with ID: {} not found or unauthorized for authenId: {}", postId, authenId);
                     return new AppException(ErrorCode.POST_NOT_FOUND_OR_UNAUTHORIZED);
@@ -98,7 +98,7 @@ public class PostService {
         existingPost.setUpdatedAt(LocalDateTime.from(Instant.now()));
 
         Post updatedPost = postRepository.save(existingPost);
-        log.info("Post updated successfully with ID: {} by authenId: {}", updatedPost.getId(), authenId);
+        log.info("Post updated successfully with ID: {} by authenId: {}", updatedPost.getPostId(), authenId);
         return toPostResponse(updatedPost);
     }
 
@@ -107,7 +107,7 @@ public class PostService {
         String postId = request.getPostId();
         log.info("Request to delete post with ID: {} by authenId: {}", postId, authenId);
 
-        Post post = postRepository.findByIdAndAuthenId(postId, authenId)
+        Post post = postRepository.findByPostIdAndAuthenId(postId, authenId)
                 .orElseThrow(() -> {
                     log.warn("Post with ID: {} not found or unauthorized for authenId: {}", postId, authenId);
                     return new AppException(ErrorCode.POST_NOT_FOUND_OR_UNAUTHORIZED);

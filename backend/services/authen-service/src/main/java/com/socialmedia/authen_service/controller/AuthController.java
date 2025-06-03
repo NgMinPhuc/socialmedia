@@ -4,15 +4,17 @@ import com.nimbusds.jose.JOSEException;
 import com.socialmedia.authen_service.dto.ApiResponse;
 import com.socialmedia.authen_service.dto.request.*;
 import com.socialmedia.authen_service.dto.response.*;
-import com.socialmedia.authen_service.entity.User;
 import com.socialmedia.authen_service.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<RegisterResponse> register(@RequestBody @Valid RegisterRequest request) {
+    public ApiResponse<RegisterResponse> register(@RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
         return ApiResponse.<RegisterResponse>builder()
                 .code(200)
@@ -42,7 +44,7 @@ public class AuthController {
 
 
     @PostMapping("/refreshToken")
-    public ApiResponse<RefreshResponse> refresh(@RequestBody @Valid RefreshRequest request) throws ParseException, JOSEException {
+    public ApiResponse<RefreshResponse> refresh(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
         RefreshResponse response = authService.refreshToken(request);
         return ApiResponse.<RefreshResponse>builder()
                 .code(200)
@@ -51,12 +53,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<LogoutResponse> logout(@RequestBody @Valid LogoutRequest request) throws ParseException, JOSEException {
-        LogoutResponse response = authService.logout(request);
-        return ApiResponse.<LogoutResponse>builder()
-                .code(200)
-                .result(response)
-                .build();
+    public ApiResponse<LogoutResponse> logout() throws ParseException, JOSEException {
+        return null;
     }
 
     @PostMapping("/validateToken")
@@ -70,12 +68,13 @@ public class AuthController {
 
     @PostMapping("/changePassword")
     public ApiResponse<ChangePasswordResponse> changePassword(
-            User user,
+            @AuthenticationPrincipal Jwt principal,
             @RequestBody @Valid ChangePasswordRequest request
     ) throws ParseException, JOSEException {
 
-        String username = user.getUsername();
-        ChangePasswordResponse response = authService.changePassword(username, request);
+        UUID authenId = UUID.fromString(principal.getSubject());
+
+        ChangePasswordResponse response = authService.changePassword(authenId, request);
         return ApiResponse.<ChangePasswordResponse>builder()
                 .code(200)
                 .result(response)

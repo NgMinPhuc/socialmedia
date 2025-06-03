@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostResponse {
-    String id;
+    String postId;
     String authenId;
     String caption;
     List<String> mediaUrls;

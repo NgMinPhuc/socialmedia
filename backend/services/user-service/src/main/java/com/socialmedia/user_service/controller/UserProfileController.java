@@ -23,7 +23,7 @@ public class UserProfileController {
     UserProfileService userProfileService;
 
     @PostMapping("/create")
-    public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody @Valid UserProfileCreationRequest request, @AuthenticationPrincipal Jwt principal) {
+    public ApiResponse<UserProfileResponse> createUserProfile(@RequestBody UserProfileCreationRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .code(200)
                 .message("User profile created successfully")
@@ -32,7 +32,7 @@ public class UserProfileController {
     }
 
     @PutMapping("/update")
-    public ApiResponse<UserProfileResponse> updateUserProfile(@RequestBody @Valid UserProfileUpdationRequest request, @AuthenticationPrincipal Jwt principal) {
+    public ApiResponse<UserProfileResponse> updateUserProfile( @AuthenticationPrincipal Jwt principal, @RequestBody @Valid UserProfileUpdationRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .code(200)
                 .message("User profile updated successfully")

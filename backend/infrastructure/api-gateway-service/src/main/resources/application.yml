@@ -6,7 +6,7 @@ app:
 
 spring:
   application:
-    name: api-gateway
+    name: api-gateway-service
   cloud:
     gateway:
       httpclient:
@@ -18,28 +18,28 @@ spring:
           lower-case-service-id: true
       routes:
         - id: auth-service
-          uri: lb://auth-service
+          uri: http://auth-service
           predicates:
             - Path=${app.api-prefix}/auth/**
           filters:
             - StripPrefix=2
 
         - id: user-service
-          uri: lb://user-service
+          uri: http://user-service
           predicates:
             - Path=${app.api-prefix}/users/**
           filters:
             - StripPrefix=2
 
         - id: notification-service
-          uri: lb://notification-service
+          uri: http://notification-service
           predicates:
             - Path=${app.api-prefix}/notifications/**
           filters:
             - StripPrefix=2
 
         - id: posts-service
-          uri: lb://posts-service
+          uri: http://posts-service
           predicates:
             - Path=${app.api-prefix}/feed/**
           filters:
@@ -49,3 +49,10 @@ data:
   redis:
     host: localhost
     port: 6379
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/ # Địa chỉ của Eureka Server
+  instance:
+    preferIpAddress: true

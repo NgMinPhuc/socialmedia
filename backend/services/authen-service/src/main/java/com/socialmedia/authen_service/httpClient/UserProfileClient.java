@@ -12,7 +12,4 @@ public interface UserProfileClient {
     Object createUserProfile(
             @RequestBody UserProfileCreationRequest request
     );
-
-    @PostMapping(value = "/users/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    Object updateUserProfile(@RequestBody UserProfileCreationRequest request);
 }

@@ -19,7 +19,7 @@ public interface PostRepository extends MongoRepository<Post, String> {
 
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    Optional<Post> findByIdAndAuthenId(String id, String authenId);
+    Optional<Post> findByPostIdAndAuthenId(String id, String authenId);
 
     Page<Post> findByAuthenIdInOrderByCreatedAtDesc(List<String> authenIds, Pageable pageable);
 

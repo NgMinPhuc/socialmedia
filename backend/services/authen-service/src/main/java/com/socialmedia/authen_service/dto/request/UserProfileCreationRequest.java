@@ -13,11 +13,11 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserProfileCreationRequest {
     String authenId;
+    String username;
+    String email;
     String firstName;
     String lastName;
-    String username;
     LocalDate dob;
-    String email;
     String phoneNumber;
     String location;
 }
