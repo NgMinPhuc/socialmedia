@@ -15,28 +15,33 @@ const Post = ({ post, onLikeUpdate }) => {
   const [isCommenting, setIsCommenting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Handle both old and new DTO formats for backward compatibility
-  const postContent = post.caption || post.content || '';
-  const postImages = post.mediaUrls || (post.image ? [post.image] : []);
-  const authorInfo = post.author || {
-    name: 'Unknown User',
-    username: 'unknown',
-    avatar: null
-  };
+  // Handle PostResponse DTO structure
+  const postContent = post.caption || '';
+  const postImages = post.mediaUrls || [];
+  const postId = post.postId || post.id;
+  const authorId = post.authenId;
 
-  const handleLikeClick = async () => {
+  // For now, we'll need to fetch author info separately or pass it from parent
+  // since PostResponse doesn't include author details
+  const authorInfo = post.author || {
+    name: 'User',
+    username: `user_${authorId}`,
+    avatar: null
+  }; const handleLikeClick = async () => {
     try {
       if (isLiked) {
-        await unlikePost(post.id);
+        await unlikePost(postId);
         setLikesCount(prev => prev - 1);
       } else {
-        await likePost(post.id);
+        await likePost(postId);
         setLikesCount(prev => prev + 1);
       }
       setIsLiked(!isLiked);
       onLikeUpdate?.();
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Show user-friendly message
+      alert('Like functionality is not available yet. It will be implemented when the backend adds like/unlike endpoints.');
     }
   };
 
@@ -46,12 +51,15 @@ const Post = ({ post, onLikeUpdate }) => {
 
     setLoading(true);
     try {
-      await commentOnPost(post.id, comment);
+      await commentOnPost(postId, comment);
       setComment('');
       setIsCommenting(false);
-      // You might want to trigger a refresh of comments here
     } catch (error) {
       console.error('Error posting comment:', error);
+      // Show user-friendly message
+      alert('Comment functionality is not available yet. It will be implemented when the backend adds comment endpoints.');
+      setComment('');
+      setIsCommenting(false);
     } finally {
       setLoading(false);
     }

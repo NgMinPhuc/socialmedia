@@ -14,19 +14,19 @@ const FollowersPage = () => {
 
   useEffect(() => {
     fetchFollowers();
-  }, [username]);
-  const fetchFollowers = async () => {
+  }, [username]); const fetchFollowers = async () => {
     try {
       const response = await userApi.getFollowers(username);
       setFollowers(response.data || response);
     } catch (error) {
       console.error('Error fetching followers:', error);
+      // Show user-friendly message for unimplemented feature
+      alert('Followers list feature is not yet available. This feature will be added in a future update.');
       setFollowers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
-
   const handleFollow = async (userId, isFollowing) => {
     try {
       if (isFollowing) {
@@ -44,6 +44,8 @@ const FollowersPage = () => {
       );
     } catch (error) {
       console.error('Error following/unfollowing user:', error);
+      // Show user-friendly alert for unimplemented features
+      alert(error.message || 'Follow functionality is not yet available. This feature will be added in a future update.');
     }
   };
 

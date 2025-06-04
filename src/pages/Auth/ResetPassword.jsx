@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/ui/Button';
 import Input from '@/ui/Input';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -10,8 +9,9 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [localError, setLocalError] = useState(''); // Dùng để quản lý mật khẩu khớp với không khớp
-  const { resetPassword, loading, error } = useAuth();
+  const [localError, setLocalError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const token = new URLSearchParams(location.search).get('token');
@@ -31,20 +31,21 @@ const ResetPassword = () => {
     if (score <= 3) return { text: 'Medium', color: 'text-yellow-500' };
     return { text: 'Strong', color: 'text-green-500' };
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       return setLocalError('Passwords do not match');
     }
     setLocalError('');
+    setLoading(true);
 
     try {
-      await resetPassword(token, password);
-      navigate('/auth/login', {
-        state: { message: 'Password has been reset successfully. Please login with your new password.' }
-      });
+      // Note: Password reset functionality is not implemented in the backend yet
+      setError('Password reset functionality is not yet implemented. Please contact support.');
     } catch (err) {
+      setError('Failed to reset password. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

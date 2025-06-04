@@ -3,12 +3,18 @@ import { postApi } from '@/services';
 
 export const usePosts = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const createPost = async (postData) => {
+  const [error, setError] = useState(null); const createPost = async (postData) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await postApi.createPost(postData);
+      // Ensure postData matches CreatePostRequest DTO
+      const requestData = {
+        caption: postData.caption || '',
+        mediaUrls: postData.mediaUrls || [],
+        privacy: postData.privacy || 'public'
+      };
+      const response = await postApi.createPost(requestData);
+      // Backend returns PostResponse DTO
       return response;
     } catch (err) {
       setError(err.message || 'Failed to create post');
@@ -19,17 +25,18 @@ export const usePosts = () => {
   }; const getPosts = async (params = {}) => {
     setLoading(true);
     try {
-      const response = await postApi.getPosts(params.page || 1, params.size || 10);
+      const response = await postApi.getAllPosts(); // Use getAllPosts instead of getPosts
       // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      // Each post in the array follows PostResponse DTO structure
       return {
-        posts: response.posts || [],
-        hasMore: !response.last,
+        posts: response.posts || response || [], // Handle both array and object response
+        hasMore: response.last ? !response.last : false,
         pagination: {
-          page: response.page,
-          size: response.size,
-          totalElements: response.totalElements,
-          totalPages: response.totalPages,
-          last: response.last
+          page: response.page || 0,
+          size: response.size || 10,
+          totalElements: response.totalElements || (response.posts?.length || 0),
+          totalPages: response.totalPages || 1,
+          last: response.last || true
         }
       };
     } catch (err) {
@@ -38,11 +45,13 @@ export const usePosts = () => {
     } finally {
       setLoading(false);
     }
-  }; const getUserPosts = async (username, page = 0, size = 10) => {
+  };// Get current user's posts (using /posts/me endpoint)
+  const getMyPosts = async (page = 0, size = 10) => {
     setLoading(true);
     try {
-      const response = await postApi.getUserPosts(username, page + 1, size); // Convert to 1-based for API
-      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      const response = await postApi.getMyPosts();
+      // Backend returns PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
+      // Each post follows PostResponse DTO structure
       return {
         posts: response.posts || [],
         hasMore: !response.last,
@@ -55,83 +64,51 @@ export const usePosts = () => {
         }
       };
     } catch (err) {
-      setError(err.message || 'Failed to fetch user posts');
+      setError(err.message || 'Failed to fetch my posts');
       throw err;
     } finally {
       setLoading(false);
     }
   };
-  const likePost = async (postId) => {
-    try {
-      const response = await postApi.likePost(postId);
-      return response;
-    } catch (err) {
-      setError(err.message || 'Failed to like post');
-      throw err;
-    }
+
+  // For backward compatibility - this will only work for current user
+  // Since backend only supports /posts/me, we ignore the username parameter
+  const getUserPosts = async (username, page = 0, size = 10) => {
+    console.warn('getUserPosts: Backend only supports current user posts. Using getMyPosts instead.');
+    return getMyPosts(page, size);
+  }; const likePost = async (postId) => {
+    console.warn('likePost: Backend endpoint not implemented yet');
+    // TODO: Implement when backend adds like/unlike endpoints
+    throw new Error('Like functionality not implemented in backend');
   };
+
   const unlikePost = async (postId) => {
-    try {
-      const response = await postApi.unlikePost(postId);
-      return response;
-    } catch (err) {
-      setError(err.message || 'Failed to unlike post');
-      throw err;
-    }
-  }; const commentOnPost = async (postId, content) => {
-    setLoading(true);
-    try {
-      const response = await postApi.addComment(postId, content);
-      return response;
-    } catch (err) {
-      setError(err.message || 'Failed to add comment');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    console.warn('unlikePost: Backend endpoint not implemented yet');
+    // TODO: Implement when backend adds like/unlike endpoints
+    throw new Error('Unlike functionality not implemented in backend');
   };
-  const getFeed = async (page = 0, size = 10) => {
-    setLoading(true);
-    try {
-      const response = await postApi.getFeed(page, size);
-      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
-      return {
-        posts: response.posts || [],
-        hasMore: !response.last,
-        pagination: {
-          page: response.page,
-          size: response.size,
-          totalElements: response.totalElements,
-          totalPages: response.totalPages,
-          last: response.last
-        }
-      };
-    } catch (err) {
-      setError(err.message || 'Failed to fetch feed');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+
+  const commentOnPost = async (postId, content) => {
+    console.warn('commentOnPost: Backend comment endpoint not implemented yet');
+    // TODO: Implement when backend adds comment endpoints
+    throw new Error('Comment functionality not implemented in backend');
+  }; const getFeed = async (page = 0, size = 10) => {
+    console.warn('getFeed: Using getAllPosts since dedicated feed endpoint not available');
+    // Use getAllPosts as fallback for feed functionality
+    return getPosts({ page, size });
   };
 
   const getPost = async (postId) => {
+    console.warn('getPost: Single post endpoint not implemented yet');
+    // TODO: Implement when backend adds single post endpoint
+    throw new Error('Single post fetch not implemented in backend');
+  }; const deletePost = async (postId) => {
     setLoading(true);
     try {
-      const response = await postApi.getPost(postId);
+      // Backend expects GetPostByPostIdRequest in body for DELETE
+      const response = await postApi.deletePost(postId);
+      // Backend returns PostDeleteResponse: {isSuccess, message}
       return response;
-    } catch (err) {
-      setError(err.message || 'Failed to fetch post');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deletePost = async (postId) => {
-    setLoading(true);
-    try {
-      await postApi.deletePost(postId);
-      return { success: true };
     } catch (err) {
       setError(err.message || 'Failed to delete post');
       throw err;
@@ -140,24 +117,39 @@ export const usePosts = () => {
     }
   };
 
-  const getComments = async (postId, page = 0, size = 10) => {
+  const updatePost = async (postId, postData) => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await postApi.getComments(postId, page, size);
+      // Ensure postData matches UpdatePostRequest DTO
+      const requestData = {
+        postId: postId,
+        caption: postData.caption || '',
+        mediaUrls: postData.mediaUrls || [],
+        privacy: postData.privacy || 'public'
+      };
+      const response = await postApi.updatePost(postId, requestData);
+      // Backend returns PostResponse DTO
       return response;
     } catch (err) {
-      setError(err.message || 'Failed to fetch comments');
+      setError(err.message || 'Failed to update post');
       throw err;
     } finally {
       setLoading(false);
     }
   };
-  return {
+  const getComments = async (postId, page = 0, size = 10) => {
+    console.warn('getComments: Comment endpoint not implemented yet');
+    // TODO: Implement when backend adds comment endpoints
+    throw new Error('Comment functionality not implemented in backend');
+  }; return {
     loading,
     error,
     createPost,
+    updatePost,
     getPosts,
     getUserPosts,
+    getMyPosts, // Add explicit getMyPosts method
     likePost,
     unlikePost,
     commentOnPost,

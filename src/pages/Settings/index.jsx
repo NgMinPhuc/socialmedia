@@ -36,11 +36,10 @@ const SettingsPage = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${
-                      activeTab === tab.id
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${activeTab === tab.id
                         ? 'bg-blue-50 text-blue-600 border border-blue-200'
                         : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <span className="text-lg">{tab.icon}</span>
                     <span>{tab.label}</span>
@@ -53,18 +52,17 @@ const SettingsPage = () => {
           {/* Content */}
           <div className="flex-1 p-6">
             {message && (
-              <div className={`mb-4 p-4 rounded-lg ${
-                message.type === 'success' 
+              <div className={`mb-4 p-4 rounded-lg ${message.type === 'success'
                   ? 'bg-green-50 text-green-800 border border-green-200'
                   : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
+                }`}>
                 {message.text}
               </div>
             )}
 
             {activeTab === 'profile' && (
-              <ProfileSettings 
-                user={user} 
+              <ProfileSettings
+                user={user}
                 updateUser={updateUser}
                 loading={loading}
                 setLoading={setLoading}
@@ -135,12 +133,12 @@ const ProfileSettings = ({ user, updateUser, loading, setLoading, showMessage })
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Avatar */}
         <div className="flex items-center space-x-6">
-          <Avatar 
-            src={avatarPreview} 
+          <Avatar
+            src={avatarPreview}
             alt={formData.fullName}
             size="xl"
           />
@@ -248,20 +246,78 @@ const ProfileSettings = ({ user, updateUser, loading, setLoading, showMessage })
 };
 
 const AccountSettings = () => {
+  const { changePassword } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    // Implement password change logic
-    console.log('Password change requested');
+  const showMessage = (msg, type = 'success') => {
+    if (type === 'success') {
+      setMessage(msg);
+      setError('');
+    } else {
+      setError(msg);
+      setMessage('');
+    }
+    setTimeout(() => {
+      setMessage('');
+      setError('');
+    }, 5000);
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      showMessage('New passwords do not match', 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showMessage('New password must be at least 8 characters long', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const passwordData = {
+        oldPassword: currentPassword,
+        newPassword: newPassword
+      };
+
+      await changePassword(passwordData);
+
+      // Clear form
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      showMessage('Password changed successfully!');
+    } catch (err) {
+      showMessage(err.message || 'Failed to change password', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
-      
+
+      {message && (
+        <div className="mb-4 p-4 rounded-lg bg-green-50 text-green-800 border border-green-200">
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -271,6 +327,7 @@ const AccountSettings = () => {
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter your current password"
             required
           />
         </div>
@@ -283,6 +340,7 @@ const AccountSettings = () => {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password (min 8 characters)"
             required
           />
         </div>
@@ -295,12 +353,16 @@ const AccountSettings = () => {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm your new password"
             required
           />
         </div>
 
-        <Button type="submit">
-          Change Password
+        <Button
+          type="submit"
+          disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+        >
+          {loading ? 'Changing Password...' : 'Change Password'}
         </Button>
       </form>
 
@@ -335,7 +397,7 @@ const PrivacySettings = () => {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Privacy Settings</h2>
-      
+
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -418,7 +480,7 @@ const NotificationSettings = () => {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Settings</h2>
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

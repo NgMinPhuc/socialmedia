@@ -1,134 +1,88 @@
-import axiosInstance from './axiosConfig';
+// src/services/postService.js
 
-const postApi = {
+import httpClient from '@/config/httpClient';
+import { API_ENDPOINTS } from '@/config/apiEndpoint';
+
+const postService = {
+  /**
+   * Lấy tất cả bài viết.
+   * BE: GET /posts/all (không @AuthenticationPrincipal)
+   * @returns {Promise<Array>} Danh sách bài viết.
+   */
+  getAllPosts: async () => {
+    try {
+      const response = await httpClient.get(API_ENDPOINTS.POST_GET_ALL);
+      return response.data.result; // Giả định BE trả về ApiResponse<PostListResponse> với danh sách posts trong 'result'
+    } catch (error) {
+      console.error('Error fetching all posts:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Tạo bài viết mới.
+   * BE: POST /posts/create (có @AuthenticationPrincipal)
+   * @param {Object} postData - Dữ liệu bài viết cần tạo (title, content, etc.).
+   * @returns {Promise<Object>} Bài viết vừa được tạo.
+   */
   createPost: async (postData) => {
     try {
-      // Prepare request data to match backend DTO: {caption, mediaUrls, privacy}
-      const requestData = {
-        caption: postData.caption || postData.content, // Support both field names for backward compatibility
-        mediaUrls: postData.mediaUrls || [], // List of media URLs
-        privacy: postData.privacy || 'public' // Default to public if not specified
-      };
-
-      const response = await axiosInstance.post('/posts', requestData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
+      const response = await httpClient.post(API_ENDPOINTS.POST_CREATE, postData);
+      return response.data.result;
     } catch (error) {
-      throw error;
-    }
-  }, getFeed: async (page = 0, size = 10) => {
-    try {
-      const response = await axiosInstance.get(`/posts/feed?page=${page}&size=${size}`);
-      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
-      return response.data;
-    } catch (error) {
+      console.error('Error creating post:', error);
       throw error;
     }
   },
 
-  getPosts: async (page = 1, size = 10) => {
+  /**
+   * Cập nhật bài viết hiện có.
+   * BE: PUT /posts/update/{postId} (có @AuthenticationPrincipal)
+   * @param {string} postId - ID của bài viết cần cập nhật.
+   * @param {Object} postData - Dữ liệu cập nhật cho bài viết.
+   * @returns {Promise<Object>} Bài viết đã được cập nhật.
+   */
+  updatePost: async (postId, postData) => {
     try {
-      const response = await axiosInstance.get(`/posts?page=${page}&size=${size}`);
-      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
-      return response.data;
+      const response = await httpClient.put(API_ENDPOINTS.POST_UPDATE(postId), postData);
+      return response.data.result;
     } catch (error) {
-      throw error;
-    }
-  },
-  getPost: async (postId) => {
-    try {
-      const requestData = {
-        postId: postId
-      };
-
-      const response = await axiosInstance.post('/posts/get', requestData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
-    } catch (error) {
+      console.error(`Error updating post ${postId}:`, error);
       throw error;
     }
   },
 
-  updatePost: async (postData) => {
-    try {
-      // Prepare request data to match backend DTO: {postId, caption, mediaUrls, privacy}
-      const requestData = {
-        postId: postData.postId,
-        caption: postData.caption,
-        mediaUrls: postData.mediaUrls || [],
-        privacy: postData.privacy || 'public'
-      };
-
-      const response = await axiosInstance.put('/posts', requestData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  /**
+   * Xóa bài viết.
+   * BE: DELETE /posts/delete/{postId} (có @AuthenticationPrincipal)
+   * @param {string} postId - ID của bài viết cần xóa.
+   * @returns {Promise<void>}
+   */
   deletePost: async (postId) => {
     try {
-      await axiosInstance.delete(`/posts/${postId}`);
+      const response = await httpClient.delete(API_ENDPOINTS.POST_DELETE(postId));
+      return response.data.result; // Hoặc `response.data` nếu BE trả về một thông báo đơn giản
     } catch (error) {
+      console.error(`Error deleting post ${postId}:`, error);
       throw error;
     }
   },
 
-  likePost: async (postId) => {
+  /**
+   * Lấy các bài viết của người dùng hiện tại.
+   * BE: GET /posts/me (có @AuthenticationPrincipal)
+   * @returns {Promise<Array>} Danh sách bài viết của người dùng hiện tại.
+   */
+  getMyPosts: async () => {
     try {
-      const response = await axiosInstance.post(`/posts/${postId}/like`);
-      return response.data;
+      // Lưu ý: Đã sửa GET_MY_POST_POST thành GET_MY_POST (trong apiEndpoints.js)
+      const response = await httpClient.get(API_ENDPOINTS.POST_GET_MY);
+      return response.data.result;
     } catch (error) {
-      throw error;
-    }
-  },
-
-  unlikePost: async (postId) => {
-    try {
-      const response = await axiosInstance.post(`/posts/${postId}/unlike`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  addComment: async (postId, content) => {
-    try {
-      const response = await axiosInstance.post(`/posts/${postId}/comments`, { content });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  getComments: async (postId, page = 0, size = 10) => {
-    try {
-      const response = await axiosInstance.get(`/posts/${postId}/comments?page=${page}&size=${size}`);
-      // Handle paginated response if backend returns similar format for comments
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  getUserPosts: async (username, page = 1, size = 10) => {
-    try {
-      const response = await axiosInstance.get(`/users/${username}/posts?page=${page}&size=${size}`);
-      // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
-      return response.data;
-    } catch (error) {
+      console.error('Error fetching current user posts:', error);
       throw error;
     }
   }
 };
 
-export default postApi;
+export default postService;

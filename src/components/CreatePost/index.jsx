@@ -38,16 +38,18 @@ const CreatePost = ({ onPostCreated }) => {
 
     setLoading(true);
     try {
-      // TODO: In a real implementation, you would first upload the image to get a URL
-      // For now, we'll create the post without media since backend expects mediaUrls (array of URLs)
+      // Format data according to CreatePostRequest DTO
       const postData = {
         caption: content.trim(),
-        mediaUrls: [], // Empty for now - in real implementation, upload image first to get URLs
+        mediaUrls: [], // Empty for now - need media upload endpoint first
         privacy: 'public'
       };
 
-      // Note: The selected image is not being uploaded yet since we need a media upload endpoint
-      // that returns URLs to include in mediaUrls array
+      // Note: Image upload functionality needs to be implemented
+      // The selected image should be uploaded first to get URLs for mediaUrls array
+      if (image) {
+        console.warn('Image upload not yet implemented - post will be created without media');
+      }
 
       await createPost(postData);
       setContent('');

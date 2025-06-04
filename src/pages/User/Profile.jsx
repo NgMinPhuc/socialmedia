@@ -11,7 +11,7 @@ import Button from '@/ui/Button';
 const ProfilePage = () => {
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
-  const { getUserPosts } = usePosts();
+  const { getUserPosts, getMyPosts } = usePosts();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,13 +30,12 @@ const ProfilePage = () => {
       fetchUserPosts();
     }
   }, [user]);
-
   const fetchUserProfile = async () => {
     try {
       if (isOwnProfile) {
         setUser(currentUser);
       } else {
-        const userData = await userApi.getUser(profileUserId);
+        const userData = await userApi.getUserProfile(profileUserId);
         setUser(userData);
         setFollowing(userData.isFollowing);
       }
@@ -46,20 +45,26 @@ const ProfilePage = () => {
       setLoading(false);
     }
   }; const fetchUserPosts = async () => {
-    if (!user?.username) return;
-
     setPostsLoading(true);
     try {
-      const response = await getUserPosts(user.username, 0, 10);
+      let response;
+      if (isOwnProfile) {
+        // Use getMyPosts for current user's profile
+        response = await getMyPosts(0, 10);
+      } else {
+        // For other users, use getUserPosts (which will fallback to getMyPosts with warning)
+        console.warn('Viewing other user profile: backend only supports current user posts');
+        response = await getUserPosts(user?.username, 0, 10);
+      }
       // Handle PostListResponse DTO: {posts, page, size, totalElements, totalPages, last}
       setPosts(response.posts || []);
     } catch (error) {
       console.error('Error fetching user posts:', error);
+      setPosts([]); // Set empty array on error
     } finally {
       setPostsLoading(false);
     }
   };
-
   const handleFollow = async () => {
     setFollowLoading(true);
     try {
@@ -72,6 +77,8 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error following/unfollowing user:', error);
+      // Show user-friendly alert for unimplemented features
+      alert(error.message || 'This feature is not yet available. It will be added in a future update.');
     } finally {
       setFollowLoading(false);
     }

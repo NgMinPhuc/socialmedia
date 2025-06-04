@@ -1,113 +1,138 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '@/services';
+import authService from '@/services/authService';
+import { getToken } from '@/config/localStorageToken';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(authService.getCurrentUser());
+  const [user, setUser] = useState(() => {
+    // Try to get user from localStorage
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = authService.getToken();
-        if (token && !user) {
-          const userData = authService.getCurrentUser();
-          setUser(userData);
+        const token = getToken();
+        const storedUser = localStorage.getItem('user');
+
+        if (token && storedUser && !user) {
+          // Try to validate the token
+          const validationResult = await authService.validateToken();
+          if (validationResult.valid) {
+            // Token is valid, restore user from localStorage
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+          } else {
+            // Token is invalid, clear everything
+            authService.logout();
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        } else if (!token) {
+          // No token, clear user data
+          localStorage.removeItem('user');
+          setUser(null);
         }
       } catch (err) {
         console.log('Auth initialization failed');
-        setError(null);
+        // Clear invalid token and user data
+        authService.logout();
+        localStorage.removeItem('user');
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     initializeAuth();
-  }, []);
-  const login = async (emailOrUsername, password) => {
+  }, []); // Remove user dependency to avoid infinite loop
+
+  const login = async (loginData) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.login(emailOrUsername, password);
-      setUser(data.user);
+      // loginData is already formatted as LoginRequest DTO by the Login component
+      const response = await authService.login(loginData);
+
+      // Extract user data from LoginResponse DTO
+      const userData = {
+        id: response.authenId,
+        username: response.username,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        authenticated: response.authenticated
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
       navigate('/');
-      return data;
+      return response;
     } catch (err) {
-      setError(err.message || 'Failed to login');
+      // Extract error message from API response structure
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to login';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
-  }; const register = async (userData) => {
+  };
+
+  const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.register(userData);
-      // Registration successful but user is not automatically logged in
-      // Redirect to login page with success message
+      // userData is already formatted as RegisterRequest DTO by the Register component
+      const response = await authService.register(userData);
+
+      // RegisterResponse DTO: {authenId, username, authenticated}
+      // User is not automatically logged in after registration
       navigate('/auth/login', {
         state: {
-          message: data.message || 'Registration successful! Please login to continue.',
-          registeredUsername: data.user.username
+          message: 'Registration successful! Please login to continue.',
+          registeredUsername: response.username
         }
       });
-      return data;
+      return response;
     } catch (err) {
-      setError(err.message || 'Failed to register');
+      // Extract error message from API response structure
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to register';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const forgotPassword = async (email) => {
+  const changePassword = async (passwordData) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.forgotPassword(email);
-      return data;
+      // passwordData is formatted as ChangePasswordRequest DTO: {oldPassword, newPassword}
+      const response = await authService.changePassword(passwordData);
+      // ChangePasswordResponse DTO: {success, message}
+      return response;
     } catch (err) {
-      setError(err.message || 'Failed to send reset email');
+      // Extract error message from API response structure
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to change password';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const resetPassword = async (token, newPassword) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await authService.resetPassword(token, newPassword);
-      return data;
-    } catch (err) {
-      setError(err.message || 'Failed to reset password');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }; const logout = async () => {
-    try {
-      const result = await authService.logout();
-
-      // Handle the new response format: {success: boolean, message?: string, error?: string}
-      if (result.success) {
-        console.log('Logout successful:', result.message);
-      } else {
-        console.warn('Logout had issues:', result.error);
-        // Continue with logout even if there were backend issues
-      }
-    } catch (error) {
-      console.warn('Logout failed:', error);
-      // Continue with logout even if API call fails
-    } finally {
-      setUser(null);
-      navigate('/auth/login');
-    }
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    localStorage.removeItem('user');
+    navigate('/auth/login');
   };
 
   const value = {
@@ -118,8 +143,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    forgotPassword,
-    resetPassword
+    changePassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

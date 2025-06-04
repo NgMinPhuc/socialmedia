@@ -1,146 +1,56 @@
-import axiosInstance from './axiosConfig';
+import httpClient from '@/config/httpClient';
+import { API_ENDPOINTS } from '@/config/apiEndpoint';
 
-const userApi = {
-  getCurrentUser: async () => {
+const userService = {
+  async getUserProfile(userId) {
     try {
-      const response = await axiosInstance.get('/users/me');
-      return response.data;
+      const { data } = await httpClient.get(API_ENDPOINTS.USER_PROFILE_GET(userId));
+      return data.result;
     } catch (error) {
+      console.error(`Error fetching user profile for ID ${userId}:`, error);
+      throw error;
+    }
+  },
+  async getMyProfile() {
+    try {
+      const { data } = await httpClient.get(API_ENDPOINTS.USER_PROFILE_GET_MY);
+      return data.result;
+    } catch (error) {
+      console.error('Error fetching current user profile:', error);
       throw error;
     }
   },
 
-  updateProfile: async (userData) => {
+  async updateUserProfile(profileData) {
     try {
-      const response = await axiosInstance.put('/users/profile', userData);
-      return response.data;
+      const { data } = await httpClient.put(API_ENDPOINTS.USER_PROFILE_UPDATE, profileData);
+      return data.result;
     } catch (error) {
+      console.error('Error updating user profile:', error);
       throw error;
     }
   },
 
-  uploadAvatar: async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      const response = await axiosInstance.post('/users/avatar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  // Placeholder methods for unimplemented backend features
+  async followUser(userId) {
+    console.warn('followUser: Backend endpoint not implemented yet');
+    throw new Error('Follow functionality not implemented in backend');
   },
 
-  getUser: async (userId) => {
-    try {
-      const response = await axiosInstance.get(`/users/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async unfollowUser(userId) {
+    console.warn('unfollowUser: Backend endpoint not implemented yet');
+    throw new Error('Unfollow functionality not implemented in backend');
   },
 
-  followUser: async (userId) => {
-    try {
-      const response = await axiosInstance.post(`/users/follow/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async getFollowers(username) {
+    console.warn('getFollowers: Backend endpoint not implemented yet');
+    throw new Error('Get followers functionality not implemented in backend');
   },
 
-  unfollowUser: async (userId) => {
-    try {
-      const response = await axiosInstance.post(`/users/unfollow/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }, getUserByUsername: async (username) => {
-    try {
-      const response = await axiosInstance.get(`/users/username/${username}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async getFollowing(username) {
+    console.warn('getFollowing: Backend endpoint not implemented yet');
+    throw new Error('Get following functionality not implemented in backend');
   },
-
-  getUserProfile: async (username) => {
-    try {
-      const response = await axiosInstance.get(`/users/profile/${username}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  getFollowers: async (username) => {
-    try {
-      const response = await axiosInstance.get(`/users/${username}/followers`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  getFollowing: async (username) => {
-    try {
-      const response = await axiosInstance.get(`/users/${username}/following`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  getUserPosts: async (username) => {
-    try {
-      const response = await axiosInstance.get(`/users/${username}/posts`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  updateSettings: async (settingsData) => {
-    try {
-      const response = await axiosInstance.put('/users/settings', settingsData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }, changePassword: async (passwordData) => {
-    try {
-      const response = await axiosInstance.put('/auth/changePassword', passwordData);
-      const data = response.data;
-
-      // Handle the backend response DTO: {success: boolean, message: string}
-      if (data.success) {
-        console.log('Password change successful:', data.message);
-        return { success: true, message: data.message };
-      } else {
-        console.warn('Password change failed:', data.message);
-        return { success: false, message: data.message };
-      }
-    } catch (error) {
-      console.error('Password change API call failed:', error);
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to change password. Please try again.'
-      };
-    }
-  },
-
-  deleteAccount: async () => {
-    try {
-      const response = await axiosInstance.delete('/users/account');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
 };
 
-export default userApi;
+export default userService;

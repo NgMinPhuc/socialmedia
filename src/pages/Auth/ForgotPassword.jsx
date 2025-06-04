@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/ui/Button';
 import Input from '@/ui/Input';
 import { ArrowLeftIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
@@ -8,15 +7,22 @@ import { ArrowLeftIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const { forgotPassword, loading, error } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
-      await forgotPassword(email);
-      setMessage('Check your email for password reset instructions');
+      // Note: This feature is not implemented in the backend yet
+      // For now, just show a placeholder message
+      setMessage('Password reset functionality is not yet implemented. Please contact support.');
     } catch (err) {
-      setMessage('');
+      setError('Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

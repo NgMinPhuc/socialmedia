@@ -6,18 +6,15 @@ import Loading from '@/components/Loading';
 
 const MyPostsPage = () => {
   const { user } = useAuth();
-  const { getUserPosts } = usePosts();
+  const { getMyPosts } = usePosts(); // Use getMyPosts instead of getUserPosts
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
-  const fetchUserPosts = async (pageNumber = 0) => {
-    if (!user?.username) return;
-
+  const fetchMyPosts = async (pageNumber = 0) => {
     try {
-      const response = await getUserPosts(user.username, pageNumber, 10);
+      const response = await getMyPosts(pageNumber, 10); // Use getMyPosts directly
       if (pageNumber === 0) {
         setPosts(response.posts);
       } else {
@@ -32,15 +29,16 @@ const MyPostsPage = () => {
   };
 
   useEffect(() => {
-    if (user?.username) {
-      fetchUserPosts();
+    if (user) { // Remove username dependency
+      fetchMyPosts();
     }
   }, [user]);
+
   const handleLoadMore = () => {
     if (!loading && hasMore) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchUserPosts(nextPage);
+      fetchMyPosts(nextPage);
     }
   };
 
@@ -74,7 +72,7 @@ const MyPostsPage = () => {
           <Post
             key={post.id}
             post={post}
-            onLikeUpdate={() => fetchUserPosts(page)}
+            onLikeUpdate={() => fetchMyPosts(page)}
           />
         ))}
       </div>
