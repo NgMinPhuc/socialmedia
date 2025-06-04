@@ -152,14 +152,13 @@ const ProfilePage = () => {
         </div>
 
         {postsLoading ? (
-          <Loading />
-        ) : posts.length > 0 ? (
-          <div className="divide-y">
-            {posts.map((post) => (
-              <Post key={post.id} post={post} />
-            ))}
-          </div>
-        ) : (
+          <Loading />) : posts.length > 0 ? (
+            <div className="divide-y">
+              {posts.map((post) => (
+                <Post key={post.postId || post.id} post={post} />
+              ))}
+            </div>
+          ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">
               {isOwnProfile ? "You haven't posted anything yet" : "No posts yet"}

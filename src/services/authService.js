@@ -26,15 +26,21 @@ const authService = {
       throw error;
     }
   },
-
   async validateToken() {
     try {
-      const { data } = await httpClient.post(API_ENDPOINTS.AUTH_VALIDATE_TOKEN);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        return { valid: false };
+      }
+      
+      const { data } = await httpClient.post(API_ENDPOINTS.AUTH_VALIDATE_TOKEN, {
+        token: token
+      });
       return data.result;
     } catch (error) {
       console.error('Token validation failed:', error);
       authService.logout();
-      throw error;
+      return { valid: false };
     }
   },
 

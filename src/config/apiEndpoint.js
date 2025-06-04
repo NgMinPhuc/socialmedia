@@ -11,7 +11,7 @@ export const API_ENDPOINTS = {
   POST_CREATE: "/posts/create", //post
   POST_UPDATE: (postId) => `/posts/update/${postId}`, //put
   POST_GET_ALL: "/posts/all", //get
-  POST_GET_MY: "/posts/me",  //get - current user's posts
+  POST_GET_MY: "/posts/me",  //get
   POST_DELETE: (postId) => `/posts/delete/${postId}`, //delete
 
   USER_PROFILE_UPDATE: "/users/update", //put

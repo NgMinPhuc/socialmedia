@@ -37,8 +37,8 @@ const SettingsPage = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${activeTab === tab.id
-                        ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                      : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     <span className="text-lg">{tab.icon}</span>
@@ -53,8 +53,8 @@ const SettingsPage = () => {
           <div className="flex-1 p-6">
             {message && (
               <div className={`mb-4 p-4 rounded-lg ${message.type === 'success'
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
                 }`}>
                 {message.text}
               </div>
@@ -116,10 +116,8 @@ const ProfileSettings = ({ user, updateUser, loading, setLoading, showMessage })
       // Upload avatar if changed
       if (avatarFile) {
         await userApi.uploadAvatar(avatarFile);
-      }
-
-      // Update profile
-      const updatedUser = await userApi.updateProfile(formData);
+      }      // Update profile
+      const updatedUser = await userApi.updateUserProfile(formData);
       updateUser(updatedUser);
       showMessage('Profile updated successfully!');
     } catch (error) {

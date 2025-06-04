@@ -16,18 +16,17 @@ const Post = ({ post, onLikeUpdate }) => {
   const [loading, setLoading] = useState(false);
 
   // Handle PostResponse DTO structure
-  const postContent = post.caption || '';
-  const postImages = post.mediaUrls || [];
   const postId = post.postId || post.id;
-  const authorId = post.authenId;
-
-  // For now, we'll need to fetch author info separately or pass it from parent
-  // since PostResponse doesn't include author details
+  const postContent = post.caption || post.content || '';
+  const postImages = post.mediaUrls || (post.image ? [post.image] : []);
   const authorInfo = post.author || {
-    name: 'User',
-    username: `user_${authorId}`,
+    id: post.authenId || 'unknown',
+    name: 'Unknown User',
+    username: 'unknown',
     avatar: null
-  }; const handleLikeClick = async () => {
+  };
+
+  const handleLikeClick = async () => {
     try {
       if (isLiked) {
         await unlikePost(postId);
@@ -40,8 +39,6 @@ const Post = ({ post, onLikeUpdate }) => {
       onLikeUpdate?.();
     } catch (error) {
       console.error('Error toggling like:', error);
-      // Show user-friendly message
-      alert('Like functionality is not available yet. It will be implemented when the backend adds like/unlike endpoints.');
     }
   };
 

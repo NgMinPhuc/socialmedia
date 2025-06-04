@@ -24,27 +24,10 @@ const Login = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Format data according to LoginRequest DTO
-      // Backend accepts either username or email, not both at the same time
-      const loginData = {
-        password: password
-      };
-
-      // Determine if input is email or username and set accordingly
-      const isEmail = emailOrUsername.includes('@');
-      if (isEmail) {
-        loginData.email = emailOrUsername;
-        loginData.username = null; // Explicitly set to null
-      } else {
-        loginData.username = emailOrUsername;
-        loginData.email = null; // Explicitly set to null
-      }
-
-      await login(loginData);
+      await login(emailOrUsername, password);
     } catch (err) {
       // Error is already handled in the context
     }
@@ -70,9 +53,7 @@ const Login = () => {
               <p className="text-gray-600">
                 Sign in to continue to your account
               </p>
-            </div>
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            </div>            <form className="space-y-6" onSubmit={handleSubmit}>
               {successMessage && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <div className="flex items-center">
@@ -101,26 +82,23 @@ const Login = () => {
                     </div>
                   </div>
                 </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email or Username
-                  </label>
-                  <Input
-                    id="emailOrUsername"
-                    type="text"
-                    required
-                    value={emailOrUsername}
-                    onChange={(e) => setEmailOrUsername(e.target.value)}
-                    placeholder="Enter your email or username"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    You can use either your email address or username to sign in
-                  </p>
-                </div>
+              )}              <div className="space-y-4">                <div>
+                <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email or Username
+                </label>
+                <Input
+                  id="emailOrUsername"
+                  type="text"
+                  required
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
+                  placeholder="Enter your email or username"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  You can use either your email address or username to sign in
+                </p>
+              </div>
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">

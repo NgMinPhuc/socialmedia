@@ -55,12 +55,10 @@ const Feed = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <CreatePost onPostCreated={handlePostCreated} />
-
-      <div className="space-y-6 mt-8">
+      <CreatePost onPostCreated={handlePostCreated} />      <div className="space-y-6 mt-8">
         {posts.map(post => (
           <Post
-            key={post.id}
+            key={post.postId || post.id}
             post={post}
             onLikeUpdate={() => fetchPosts(page)}
           />

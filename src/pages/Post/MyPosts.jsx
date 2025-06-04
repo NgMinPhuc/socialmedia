@@ -6,15 +6,18 @@ import Loading from '@/components/Loading';
 
 const MyPostsPage = () => {
   const { user } = useAuth();
-  const { getMyPosts } = usePosts(); // Use getMyPosts instead of getUserPosts
+  const { getUserPosts } = usePosts();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const fetchMyPosts = async (pageNumber = 0) => {
+
+  const fetchUserPosts = async (pageNumber = 0) => {
+    if (!user?.username) return;
+
     try {
-      const response = await getMyPosts(pageNumber, 10); // Use getMyPosts directly
+      const response = await getUserPosts(user.username, pageNumber, 10);
       if (pageNumber === 0) {
         setPosts(response.posts);
       } else {
@@ -29,16 +32,15 @@ const MyPostsPage = () => {
   };
 
   useEffect(() => {
-    if (user) { // Remove username dependency
-      fetchMyPosts();
+    if (user?.username) {
+      fetchUserPosts();
     }
   }, [user]);
-
   const handleLoadMore = () => {
     if (!loading && hasMore) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchMyPosts(nextPage);
+      fetchUserPosts(nextPage);
     }
   };
 
@@ -66,13 +68,12 @@ const MyPostsPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">My Posts</h1>
-      <div className="space-y-6">
+      <h1 className="text-2xl font-bold mb-6">My Posts</h1>      <div className="space-y-6">
         {posts.map((post) => (
           <Post
-            key={post.id}
+            key={post.postId || post.id}
             post={post}
-            onLikeUpdate={() => fetchMyPosts(page)}
+            onLikeUpdate={() => fetchUserPosts(page)}
           />
         ))}
       </div>

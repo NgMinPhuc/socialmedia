@@ -6,40 +6,16 @@ export const useUser = () => {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  // Only updateProfile and getUserProfile are available here
   const updateProfile = async (userData) => {
     setLoading(true);
     setError(null);
     try {
-      // Format data according to UserProfileUpdationRequest DTO
-      const updateRequest = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        dob: userData.dob,
-        phoneNumber: userData.phoneNumber,
-        location: userData.location,
-      }; const response = await userApi.updateUserProfile(updateRequest);
-
-      // Handle UserProfileResponse DTO structure - userApi already returns data.result
-      const updatedUser = {
-        ...user,
-        userId: response.userId,
-        authenId: response.authenId,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        username: response.username,
-        dob: response.dob,
-        phoneNumber: response.phoneNumber,
-        location: response.location,
-        email: response.email,
-      };
-
-      setUser(updatedUser);
+      const response = await userApi.updateUserProfile(userData);
+      setUser(response);
       return response;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || 'Failed to update profile';
-      setError(errorMessage);
+      setError(err.message || 'Failed to update profile');
       throw err;
     } finally {
       setLoading(false);
@@ -47,114 +23,40 @@ export const useUser = () => {
   };
   const followUser = async (userId) => {
     setLoading(true);
-    setError(null);
     try {
-      // Show user-friendly message for unimplemented feature
-      throw new Error('Follow functionality is not yet available. This feature will be added in a future update.');
+      // This feature is not implemented in the backend yet
+      throw new Error('Follow feature is not yet implemented. Backend API endpoint needed.');
     } catch (err) {
-      const errorMessage = err.message || 'Failed to follow user';
-      setError(errorMessage);
+      setError(err.message || 'Failed to follow user');
       throw err;
     } finally {
       setLoading(false);
     }
   };
-
   const unfollowUser = async (userId) => {
     setLoading(true);
-    setError(null);
     try {
-      // Show user-friendly message for unimplemented feature
-      throw new Error('Unfollow functionality is not yet available. This feature will be added in a future update.');
+      // This feature is not implemented in the backend yet
+      throw new Error('Unfollow feature is not yet implemented. Backend API endpoint needed.');
     } catch (err) {
-      const errorMessage = err.message || 'Failed to unfollow user';
-      setError(errorMessage);
+      setError(err.message || 'Failed to unfollow user');
       throw err;
     } finally {
       setLoading(false);
     }
-  }; const getUserProfile = async (userId) => {
+  };
+  const getUserProfile = async (userId) => {
     setLoading(true);
-    setError(null);
     try {
       const response = await userApi.getUserProfile(userId);
-      // Handle UserProfileResponse DTO structure - response is already the result
-      return {
-        userId: response.userId,
-        authenId: response.authenId,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        username: response.username,
-        dob: response.dob,
-        phoneNumber: response.phoneNumber,
-        location: response.location,
-        email: response.email,
-      };
+      return response;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to get user profile';
-      setError(errorMessage);
+      setError(err.message || 'Failed to get user profile');
       throw err;
     } finally {
       setLoading(false);
     }
   };
-  const getMyProfile = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await userApi.getMyProfile();
-      // Handle UserProfileResponse DTO structure - response is already the result
-      return {
-        userId: response.userId,
-        authenId: response.authenId,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        username: response.username,
-        dob: response.dob,
-        phoneNumber: response.phoneNumber,
-        location: response.location,
-        email: response.email,
-      };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to get current user profile';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFollowers = async (username) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Show user-friendly message for unimplemented feature
-      throw new Error('Followers list functionality is not yet available. This feature will be added in a future update.');
-    } catch (err) {
-      const errorMessage = err.message || 'Failed to get followers';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFollowing = async (username) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Show user-friendly message for unimplemented feature
-      throw new Error('Following list functionality is not yet available. This feature will be added in a future update.');
-    } catch (err) {
-      const errorMessage = err.message || 'Failed to get following list';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
 
   return {
     user,
@@ -164,8 +66,5 @@ export const useUser = () => {
     followUser,
     unfollowUser,
     getUserProfile,
-    getMyProfile,
-    getFollowers,
-    getFollowing,
   };
 };

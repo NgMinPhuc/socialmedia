@@ -59,16 +59,15 @@ const ExplorePage = () => {
         <div className="text-center py-8">
           <p className="text-gray-500">No posts to explore yet.</p>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <Post
-              key={post.id}
-              post={post}
-              onLikeUpdate={() => fetchPosts(page)}
-            />
-          ))}
-        </div>
+      ) : (<div className="space-y-6">
+        {posts.map((post) => (
+          <Post
+            key={post.postId || post.id}
+            post={post}
+            onLikeUpdate={() => fetchPosts(page)}
+          />
+        ))}
+      </div>
       )}
 
       {loading && <Loading />}
